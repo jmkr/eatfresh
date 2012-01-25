@@ -1,0 +1,18 @@
+def SayMiu() =>
+{
+  "Miu"
+}
+
+def SayBuff() =>
+{
+  "Buff"
+}
+
+
+def Guess() =>
+{
+  output "cat will tell: " + SayMiu();
+  output "dog will answer: " + SayBuff()			
+}
+
+Guess()
