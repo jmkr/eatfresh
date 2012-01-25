@@ -245,7 +245,16 @@ object Interp {
           case _ => throw undefined("assigning to nonexistent variable")
         }
         case Block(vbs, t) => {
-            val xvs = for ( VarBind(x, e) <- vbs ) gStore(config.env(x)) = evalTo(e)
+            val xvs = for ( VarBind(x, e) <- vbs ) { 
+              var addr = alloc(evalTo(e))
+              // test lines
+              println(x)
+              println(addr)
+              println(gStore(addr))
+              // this line isn't working for some reason
+              config.env.+(x, addr)
+              //println(config.env(x))
+            }
             evalTo(t)
         }
     }
