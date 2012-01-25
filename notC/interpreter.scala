@@ -45,7 +45,7 @@ case class FunMap(funm:Map[Var, FunctionDef] = Map()) {
 case class Env(env:Map[Var, Address] = Map()) {
   def apply(x:Var): Address = env get x match {
     case Some(a) => a
-    case None => throw undefined("free variable")
+    case None => {println(x); throw undefined("free variable") }
   }
   def +(tup:Tuple2[Var, Address]): Env = Env(env + tup)
 }
@@ -245,17 +245,12 @@ object Interp {
           case _ => throw undefined("assigning to nonexistent variable")
         }
         case Block(vbs, t) => {
-            val xvs = for ( VarBind(x, e) <- vbs ) { 
-              var addr = alloc(evalTo(e))
-              // test lines
-              println(x)
-              println(addr)
-              println(gStore(addr))
-              // this line isn't working for some reason
-              config.env.+(x, addr)
-              //println(config.env(x))
-            }
-            evalTo(t)
+          var newEnv = Env() // <- this is ok for this hw but we need to switch to a val loaded using a foldLeft after
+          val xvs = for ( VarBind(x, e) <- vbs ) {
+            val addr = alloc(evalTo(e))
+            newEnv = newEnv+(x -> addr)
+          }
+          eval(Config(t, newEnv))
         }
     }
     evalTo(config.t)
