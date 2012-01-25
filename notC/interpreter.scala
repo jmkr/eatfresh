@@ -120,7 +120,8 @@ object SemanticHelpers {
   def inject(prog:Program): Config = { 
 
     // setup globalFunMap
-    prog.fds.foldLeft()( (a,b) => globalFunMap = globalFunMap + (b.f, b) )
+//    prog.fds.foldLeft()( (a,b) => globalFunMap = globalFunMap + (b.f, b) )
+    prog.fds.map( b => globalFunMap = globalFunMap + (b.f, b) )
     // return and empty environment 
     return Config(prog.t,Env())
   }
