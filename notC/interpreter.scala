@@ -118,9 +118,19 @@ object SemanticHelpers {
   // initialize the global FunMap instead of actually putting it into
   // the initial configuration as specified by the formal semantics
   def inject(prog:Program): Config = { 
-    // !! FILL ME IN
-    prog.fds.foldLeft()( (a,b) => globalFunMap + (b.f, b) )
-    return Config(prog.t,Env())
+    // setup environment to return
+    val gEnv = Env()
+
+    // setup globalFunMap
+    prog.fds.foldLeft()( (a,b) => {
+      globalFunMap + (b.f, b)
+      var i = 0
+      while(i < b.xs.length){
+        gEnv + (b.xs[i],Address())
+        i += 1
+      } 
+    })
+    return Config(prog.t,gEnv)
   }
 
   // allocate value into store; unlike the helper function specified
