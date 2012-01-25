@@ -244,15 +244,26 @@ object Interp {
             else {
               //make new Environment with es values evaluated and stored then run eval on new env and funDef.t
               // NONE ONE LINE WAY
-              var newEnv = Env(config.env)
-              var i = 0
-              while(i < es.length){
-                val addr = alloc(evalTo(es(i)))
-                newEnv = newEnv + (funDef.xs(i) -> addr)
-                i += 1
-              }
-              eval(Config(funDef.t, newEnv))
-            }
+//              var newEnv = Env(config.env)
+//              var i = 0
+//              while(i < es.length){
+//                val addr = alloc(evalTo(es(i)))
+//                newEnv = newEnv + (funDef.xs(i) -> addr)
+//                i += 1
+//              }
+//              eval(Config(funDef.t, newEnv))
+
+
+                  //the slightly more readable 3 line version
+//                  val addrs = es.map( e => alloc(evalTo(e)) )
+//                  val map = (funDef.xs zip addrs).toMap
+//                  eval(Config(funDef.t, Env(config.env.env++map)))
+                  
+                  //the impossible to read one line version
+                  eval(Config(funDef.t, Env(config.env.env++(funDef.xs zip es.map( e => alloc(evalTo(e)) )).toMap)))
+
+
+                }
           }
           case _ => throw undefined("assigning to nonexistent variable")
         }
