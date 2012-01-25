@@ -120,7 +120,7 @@ object SemanticHelpers {
   def inject(prog:Program): Config = { 
 
     // setup globalFunMap
-    prog.fds.foldLeft()( (a,b) => globalFunMap + (b.f, b) )
+    prog.fds.foldLeft()( (a,b) => globalFunMap = globalFunMap + (b.f, b) )
     // return and empty environment 
     return Config(prog.t,Env())
   }
@@ -238,22 +238,34 @@ object Interp {
             case StrT => StringV(scala.Console.readLine())
         }
         case Call(f, es) => globalFunMap get f match {
-          /*
-          case Some(_) => { 
+          case Some(_) => {
+            val funDef = globalFunMap(f)
+            if(es.length != funDef.xs.length) throw undefined("arguments and parameters don't match")
+            else {
+              //make new Environment with es values evaluated and stored then run eval on new env and funDef.t
+              // NONE ONE LINE WAY
+              var newEnv = Env(config.env)
+              var i = 0
+              while(i < es.length){
+                val addr = alloc(evalTo(es(i)))
+                newEnv = newEnv + (funDef.xs(i) -> addr)
+                i += 1
+              }
+              eval(Config(funDef.t, newEnv))
+            }
           }
-          */
           case _ => throw undefined("assigning to nonexistent variable")
         }
         case Block(vbs, t) => {
-//          var newEnv = Env() // <- this is ok for this hw but we need to switch to a val loaded using a foldLeft after
-//          val xvs = for ( VarBind(x, e) <- vbs ) {
-//            val addr = alloc(evalTo(e))
-//            newEnv = newEnv+(x -> addr)
-//          }
-//          eval(Config(t, newEnv))
+          var newEnv = Env(config.env) // <- this is ok for this hw but we need to switch to a val loaded using a foldLeft after
+          val xvs = for ( VarBind(x, e) <- vbs ) {
+            val addr = alloc(evalTo(e))
+            newEnv = newEnv+(x -> addr)
+          }
+          eval(Config(t, newEnv))
           
           //the one liner 'proper' version:
-          eval(Config(t, Env(vbs.foldLeft(Map[Var,Address]())((a, b) =>  a + (b.x -> alloc(evalTo(b.e)) )))))
+          //eval(Config(t, Env(vbs.foldLeft(Map[Var,Address]())((a, b) =>  a + (b.x -> alloc(evalTo(b.e)) )))))
         }
     }
     evalTo(config.t)
