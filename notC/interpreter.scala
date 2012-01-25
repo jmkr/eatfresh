@@ -124,11 +124,8 @@ object SemanticHelpers {
     // setup globalFunMap
     prog.fds.foldLeft()( (a,b) => {
       globalFunMap + (b.f, b)
-      var i = 0
-      while(i < b.xs.length){
-        gEnv + (b.xs[i],Address())
-        i += 1
-      } 
+      b.xs.foreach((v:Var) => gEnv + (v, Address()))
+      //b.xs.foldLeft()( (c,d) => gEnv + (d->Address()) )
     })
     return Config(prog.t,gEnv)
   }
