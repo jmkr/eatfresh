@@ -257,15 +257,15 @@ object Interp {
           case _ => throw undefined("assigning to nonexistent variable")
         }
         case Block(vbs, t) => {
-          var newEnv = Env(config.env) // <- this is ok for this hw but we need to switch to a val loaded using a foldLeft after
-          val xvs = for ( VarBind(x, e) <- vbs ) {
-            val addr = alloc(evalTo(e))
-            newEnv = newEnv+(x -> addr)
-          }
-          eval(Config(t, newEnv))
+//          var newEnv = Env(config.env) // <- this is ok for this hw but we need to switch to a val loaded using a foldLeft after
+//          val xvs = for ( VarBind(x, e) <- vbs ) {
+//            val addr = alloc(evalTo(e))
+//            newEnv = newEnv+(x -> addr)
+//          }
+//          eval(Config(t, newEnv))
           
           //the one liner 'proper' version:
-          //eval(Config(t, Env(vbs.foldLeft(Map[Var,Address]())((a, b) =>  a + (b.x -> alloc(evalTo(b.e)) )))))
+          eval(Config(t, Env(vbs.foldLeft(config.env.env)((a, b) =>  a + (b.x -> alloc(evalTo(b.e)) )))))
         }
     }
     evalTo(config.t)
