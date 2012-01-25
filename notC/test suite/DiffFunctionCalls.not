@@ -1,0 +1,26 @@
+def PrintNumb(x) =>
+{
+  output x
+}
+
+def Caller(t)=>
+{
+  var a =0 in
+  while(a <= 10)
+  {
+    PrintNumb(a+t);
+    a:= a+1 
+  } 
+}
+
+
+output "Start from 0: ";
+Caller(0);
+output "";
+
+Caller(40);
+
+output "";
+Caller(-10)
+
+
