@@ -173,8 +173,8 @@ object Interp {
             evalTo(t1)
             evalTo(t2)
         }
-        case Assign(x, e) => gStore get x match {
-            case Some(_) => { gStore(x) = evalTo(e); UnitV() }
+        case Assign(x, e) => gStore get config.env(x) match {
+            case Some(_) => { gStore(config.env(x)) = evalTo(e); UnitV() }
             case _ => throw undefined("assigning to nonexistent variable")
         }
         case w @ While(e, t) => evalTo(e) match {
@@ -193,7 +193,7 @@ object Interp {
         case Bool(b) => BoolV(b)
         case Str(str) => StringV(str)
         case NotUnit() => UnitV()
-        case x:Var => gStore(x)
+        case x:Var => gStore(config.env(x))
         case Not(e) => evalTo(e) match {
             case BoolV(b) => BoolV(!b)
             case _ => throw undefined("negated expression not a bool")
@@ -235,8 +235,15 @@ object Interp {
             case NumT => NumV(BigInt(scala.Console.readInt()))
             case StrT => StringV(scala.Console.readLine())
         }
+        case Call(f, es) => globalFunMap get f match {
+          /*
+          case Some(_) => { 
+          }
+          */
+          case _ => throw undefined("assigning to nonexistent variable")
+        }
         case Block(vbs, t) => {
-            val xvs = for ( VarBind(x, e) <- vbs ) gStore(x) = evalTo(e)
+            val xvs = for ( VarBind(x, e) <- vbs ) gStore(config.env(x)) = evalTo(e)
             evalTo(t)
         }
     }
