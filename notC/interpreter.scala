@@ -118,12 +118,8 @@ object SemanticHelpers {
   // initialize the global FunMap instead of actually putting it into
   // the initial configuration as specified by the formal semantics
   def inject(prog:Program): Config = { 
-<<<<<<< HEAD
     // !! FILL ME IN
     prog.fds.foldLeft()( (a,b) => globalFunMap + (b.f, b) )
-=======
-	prog.fds.foldLeft()( (a,b) => globalFunMap + (b.f, b) )
->>>>>>> 0375b8fb90885539a548e0b90b05727c342a9b94
     return Config(prog.t,Env())
   }
 
