@@ -10,9 +10,8 @@ where they can perform actions that have no affect on the main world, and option
 those changes back into the main world."
 
 Group Members:
-David Schnurr
-James Ebentier
-Vincent Alindogan
+John Meeker
+Ken 
 
 ======================
 Implementation Plan
