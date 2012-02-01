@@ -11,7 +11,7 @@ those changes back into the main world."
 
 Group Members:
 John Meeker
-Ken 
+Ken Hwang 
 
 ======================
 Implementation Plan
