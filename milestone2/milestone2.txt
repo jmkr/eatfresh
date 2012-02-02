@@ -10,9 +10,9 @@ where they can perform actions that have no affect on the main world, and option
 those changes back into the main world."
 
 
-======================
-Implementation Plan
-======================
+/**************************/
+--- Implementation Plan ---
+/**************************/
 1) What have you learned about the topic you selected?
 	The notion of worlds is to make a new language construct that redefines the role of a program state. 
 	All computation takes place within a world (changes to global and local variables, arrays, objects, 
@@ -36,18 +36,31 @@ Implementation Plan
 		were first read by the child world. (Called a serializability check).
 		-If a commit fails a serializability check, then both the child and parent worlds will remain
 		unchanged and CommitFailed exception will be thrown.
-
-3) What is your vision for the final version of your project, based on what you have learned?
+		
+3) What is your vision for the final version of your project, based on what you have learned? You could 
+include some made-up programs in that final language as an example of what you intend.
+	Our final vision for our project is to incorporate all of the features discussed above, especially
+	accounting for the constraints detailed in the safety properties. We want to design a new way for
+	developers to write programs by giving them the ability to sprout, commit, compare,	and push updates 
+	across several different worlds.
 	
+	
+4) How will you get to that final vision?
+	The plan to reach our final vision is to start with the notC language and expanding its functionality
+	to include the features of the worlds implementation. 
+	Steps:
+		1. Add 'world' class to notC as a first class value
+		2. 
+		3.
+		4. ?????
+		5. Profit
 
 
-You could include some made-up programs in that final language as an example of what you intend.
-
-How will you get to that final vision?
-
-As I stated above, you should describe an incremental series of milestones so that you're guaranteed 
-to always have something to turn in even if your vision turns out to be too ambitious.
-
-====================
-Collaboration Plan
-====================
+/**************************/
+--- Collaboration Plan ---
+/**************************/
+We plan to work on our strategy and approach to the overall project as whole, focusing on the syntatical
+and semantic issues. Individually, we are going to divide the functionality implementation steps as evenly
+as possible. We want to test our implementation thoroughly, and will do so by having code reviewed and 
+tested by the entire group. With this approach, we hope that the end result will be a robust and useful
+addition to the notC language.
