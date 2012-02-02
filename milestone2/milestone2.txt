@@ -56,9 +56,7 @@ include some made-up programs in that final language as an example of what you i
 		3. Build flags on all pushable variables to note if they have been accessed or overwritten; this is to assist with
 			pushing changes back to the parent. 
 		4. Use flags to determine if commiting is possible, and if propagation down to unchanged children is possible. 
-		5. If time permits, chilren worlds can consume other children worlds, aquiring all the changes of the consumed world. 
-		6. ?????
-		7. Profit
+		5. If time permits, children worlds can consume other children worlds, aquiring all the changes of the consumed world. 
 
 
 /**************************/
