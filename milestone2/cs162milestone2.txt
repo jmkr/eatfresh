@@ -46,6 +46,38 @@ You could include some made-up programs in that final language as an example of 
     using basic comparison operators, pull changes from parent worlds into sprouted worlds, and
     executing code inside of another world. 
 
+    Here is an example of a made-up program might look like after adding worlds to notC:
+
+    var
+        a = unit,
+        b = unit,
+        c = unit,
+        d = unit
+    in
+        a = thisWorld;
+        b = a.sprout();
+
+        in b {
+            c = thisWorld.sprout();  << thisWorld refers to b here >>
+            in c {
+                d = 7
+            };
+            c.commit()
+        };
+
+        b.commit();
+        output d;   << prints 7 >>
+
+        d = 23;
+        b.update();
+
+        in b {
+            output d    << prints 23 >>
+        }
+
+    Clearly this program does nothing useful, but it's a provides an example of how the
+    programmer might interact with worlds.
+
 How will you get to that final vision?
 
     We plan on starting with notC as our base language, and then taking an incremental approach
@@ -67,5 +99,6 @@ How do you plan to collaborate on the project?
 
     Intial brainstorming of syntactical and semantics implementation will be done with the entire group.
     Then we will work in groups of one and two splitting up the incremental tasks in an attempt not to
-    overload any one group member.Whoever is not currently working on the implementation of a given
+    overload any one group member. Whoever is not currently working on the implementation of a given
     aspect will be working on the creation of test programs to test all cases within the new implementation.
+
