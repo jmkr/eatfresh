@@ -110,7 +110,7 @@ object SemanticHelpers {
 
   // lift program to initial configuration.
   def inject(prog:Program): Config = {
-    // FILL ME IN
+    return Config(prog.t,Env())
   }
 
   // allocate value into store; unlike the helper function specified
@@ -126,7 +126,8 @@ object SemanticHelpers {
   // convert a list of values into a ListV of values (returning the
   // address from store-allocating the ListV)
   def makeList(vs:List[Value]): Address = {
-    // FILL ME IN
+    def makeCell(v:Value, a:Address): Address = alloc( ListF(v, alloc(v)) )
+    vs.foldRight( alloc(Empty()) ) (makeCell)
   }
 }
 
