@@ -1,0 +1,1 @@
+var  even = e(n) => { if (n = 0) true else odd(n-1)   },   odd  = o(n) => { if (n = 0) false else even(n-1) }in output even(42)

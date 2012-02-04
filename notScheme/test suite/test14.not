@@ -1,0 +1,31 @@
+<< read in a set of numbers and sort them in ascending order using
+   insertion sort. we create a list of the sorted values, then at the
+   end we print that list out >>
+
+var 
+insert = insert(list, n) => 
+{
+  if (list = []) list := n :: []
+  else if (list.head <= n) list.tail := insert(list.tail, n)
+  else list := n :: list;
+  list
+},
+
+print_list = print_list(list) => 
+{
+  if (!(list = [])) {
+    output list.head;
+    print_list(list.tail)
+  }
+},
+
+list = []
+in
+
+list := insert(list, 42);
+list := insert(list, 24);
+list := insert(list, 12);
+list := insert(list, 56);
+list := insert(list, 1);
+
+print_list(list)

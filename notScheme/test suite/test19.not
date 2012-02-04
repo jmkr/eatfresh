@@ -1,0 +1,25 @@
+var makeCoord2D = f(x, y) => {
+  var xcoord = x, ycoord = y in 
+  dispatch(todo, arg) => 
+  {
+    if (todo = "getX") xcoord
+    else if (todo = "getY") ycoord
+    else if (todo = "setX") xcoord := arg 
+    else if (todo = "setY") ycoord := arg 
+    else unit
+  } 
+} 
+in
+
+var
+  pointA = makeCoord2D(5, 6),
+  pointB = makeCoord2D(7, 9)
+in
+
+pointA("setX", 2);
+pointB("setY", pointA("getX", unit));
+
+output pointA("getX", unit); 
+output pointA("getY", unit); 
+output pointB("getX", unit);  
+output pointB("getY", unit)

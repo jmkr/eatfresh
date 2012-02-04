@@ -1,0 +1,4 @@
+var
+  list=(1+2)::true::"bob"::[]
+in
+output list

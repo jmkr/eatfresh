@@ -1,0 +1,26 @@
+<< Euclid's GCD algorithm >>
+
+var 
+mod = mod(n, d) => 
+{ 
+  if ((n <= d) & (!(n = d))) n else mod((n - d), d) 
+},
+
+gcd = f(a, b) => 
+{
+  var r = unit in
+  while (!(b = 0)) {
+    r := mod(a, b);
+    a := b;
+    b := r
+  };
+  output "the GCD is: ";
+  output a
+},
+
+a = 33, 
+b = 55
+in 
+
+output "Computing the GCD of 33 and 55";
+gcd(a, b)

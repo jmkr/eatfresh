@@ -1,0 +1,4 @@
+var
+  list=[3, true, "bob"]
+in
+output list.head

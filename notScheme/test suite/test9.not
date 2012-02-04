@@ -1,0 +1,1 @@
+var x = 1 in  var foo = f() => { output x } in    var x = 2 in      foo()
