@@ -131,6 +131,26 @@ package cs162.notScheme.interpreter {
 			def makeCell(v:Value, a:Address): Address = alloc( ListF(v, a) )
 			vs.foldRight( alloc(Empty()) ) (makeCell)
 		}
+		
+		// print list (used in output function)
+		// pretty ugly, someone make it pretty :)
+		def printList(lv:Value): Value = {
+			lv match {
+				case ListF(v, a) => {
+					print(v)
+					gStore(a) match {
+						case Empty() => UnitV()
+						case _ => {
+							print(", ")
+							printList( gStore(a) )
+						}
+					}
+				}
+				case _ => UnitV()
+			}
+		}
+		
+
 	}
 	
 	//---------- INTERPRETER ----------
@@ -181,31 +201,41 @@ package cs162.notScheme.interpreter {
 					case BoolV(false) => UnitV()
 					case _ => throw undefined("while guard not a bool")
 				}
-				case Out(e) => {
+				case Out(e) => evalTo(e) match {
 					// FILL ME IN
-					println(evalTo(e)) // this is what we had in notC interpreter
-					UnitV() // this is what we had in notC interpreter
+					case ListF(v, a) => {
+						print("[")
+						printList( evalTo(e) )
+						print("]")
+						UnitV()
+					}
+					case Empty() => {
+						print("[]")
+						UnitV()
+					}
+					case _ => { println(evalTo(e)) }
+					UnitV()
 				}
 				case HAssign(e1, e2) => e1 match {
 					// FILL ME IN
-					// Add a case for Empty()? Can we assign to head of an empty list?
 					case x:Var => gStore(env(x)) match {
 						case ListF(v, a) => {
 							gStore(env(x)) = ListF(evalTo(e2), a)
 							UnitV()
 						}
+						case Empty() => throw undefined("assigning to head of empty list")
 						case _ => throw undefined("assigning to head of a non-list")
 					}
 					case _ => throw undefined("assigning to head of a non-list")
 				}
 				case TAssign(e1, e2) => evalTo(e1) match {
 					// FILL ME IN
-					// Add a case for Empty()? Can we assign to tail of an empty list?
 					case x:Var => gStore(env(x)) match {
 						case ListF(v, a) => {
 							gStore(a) = evalTo(e2)
 							UnitV()
 						}
+						case Empty() => throw undefined("assigning to tail of empty list")
 						case _ => throw undefined("assigning to tail of a non-list")
 					}
 					case _ => throw undefined("assigning to tail of a non-list")
@@ -222,7 +252,7 @@ package cs162.notScheme.interpreter {
 				case BinOp(bop, e1, e2) => bop match {
 					case Equal => {
 						// FILL ME IN
-						//This is what we had in notC, modify for lists?
+						//This is what we had in notC, modify to add support for lists?
 						val v1 = evalTo(e1)
 						val v2 = evalTo(e2)
 						BoolV(v1 == v2)
@@ -266,15 +296,13 @@ package cs162.notScheme.interpreter {
 				}
 				case Head(e) => evalTo(e) match {
 					// FILL ME IN
-					// If e is a list, return the head
 					case ListF(v, a) => v
-					case _ => throw undefined("invoked head on a non-list")
+					case _ => throw undefined("taking the head of a non-list")
 				}
 				case Tail(e) => evalTo(e) match {
 					// FILL ME IN
-					// If e is a list, return the tail
 					case ListF(v, a) => gStore(a)
-					case _ => throw undefined("invoked tail on a non-list")
+					case _ => throw undefined("taking the tail of a non-list")
 				}
 				case Block(vbs, t) => {
 					// FILL ME IN
