@@ -252,7 +252,7 @@ package cs162.notScheme.interpreter {
 				case BinOp(bop, e1, e2) => bop match {
 					case Equal => {
 						// FILL ME IN
-						//This is what we had in notC, modify to add support for lists?
+						//This is what we had in notC, modify to add support for lists (slide 28 in http://cs.ucsb.edu/~benh/cs162/slides/04-notScheme.pdf)
 						val v1 = evalTo(e1)
 						val v2 = evalTo(e2)
 						BoolV(v1 == v2)
@@ -276,7 +276,12 @@ package cs162.notScheme.interpreter {
 							case Lte => BoolV(s1 <= s2)
 							case _   => throw undefined("illegal operation on strings")
 						}
-						case (v:Value, a:Address) => UnitV()// FILL ME IN
+						case (v:Value, a:Address) => bop match {
+							// FILL ME IN
+							// Think this is for the cons (::) operator
+							case Cons => ListF(v, a)
+							case _ => throw undefined("illegal operation on lists")
+						}
 						case _ => throw undefined("illegal binary operation")
 					}
 				}
