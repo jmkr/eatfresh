@@ -252,6 +252,7 @@ package cs162.notScheme.interpreter {
 				case BinOp(bop, e1, e2) => bop match {
 					case Equal => {
 						// FILL ME IN
+						// TODO
 						//This is what we had in notC, modify to add support for lists (slide 28 in http://cs.ucsb.edu/~benh/cs162/slides/04-notScheme.pdf)
 						val v1 = evalTo(e1)
 						val v2 = evalTo(e2)
@@ -278,7 +279,6 @@ package cs162.notScheme.interpreter {
 						}
 						case (v:Value, a:Address) => bop match {
 							// FILL ME IN
-							// Think this is for the cons (::) operator
 							case Cons => ListF(v, a)
 							case _ => throw undefined("illegal operation on lists")
 						}
@@ -294,7 +294,11 @@ package cs162.notScheme.interpreter {
 					case NumT => NumV(BigInt(scala.Console.readLine()))
 					case StrT => StringV(scala.Console.readLine())
 				}
-				case Call(ef, es) => UnitV() // FILL ME IN
+				case Call(ef, es) => {
+					// FILL ME IN
+					// TODO
+					UnitV()
+				}
 				case NotList(es) => {
 					// FILL ME IN
 					makeList( (es map evalTo) )
@@ -311,13 +315,18 @@ package cs162.notScheme.interpreter {
 				}
 				case Block(vbs, t) => {
 					// FILL ME IN
+					// TODO
 					// This is what we had in notC solution, maybe need to add stuff?
 					val xvs = for ( VarBind(x, e) <- vbs ) yield (x, evalTo(e))
 					val newEnv = xvs.foldLeft( env )(
 						(env, xv) => env + (xv._1 -> alloc(xv._2)) )
 						eval(Config(t, newEnv))
 				}
-				case Fun(f, xs, t) => UnitV() // FILL ME IN
+				case Fun(f, xs, t) => {
+					// FILL ME IN
+					// TODO
+					UnitV()
+				}
 			}
     
 			evalTo(config.t)
