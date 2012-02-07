@@ -110,6 +110,7 @@ object SemanticHelpers {
 
   // lift program to initial configuration.
   def inject(prog:Program): Config = {
+	// FILL ME IN
     return Config(prog.t,Env())
   }
 
@@ -126,7 +127,8 @@ object SemanticHelpers {
   // convert a list of values into a ListV of values (returning the
   // address from store-allocating the ListV)
   def makeList(vs:List[Value]): Address = {
-    def makeCell(v:Value, a:Address): Address = alloc( ListF(v, alloc(v)) )
+	// FILL ME IN
+    def makeCell(v:Value, a:Address): Address = alloc( ListF(v, a) )
     vs.foldRight( alloc(Empty()) ) (makeCell)
   }
 }
@@ -179,9 +181,26 @@ object Interp {
 	case BoolV(false) => UnitV()
 	case _ => throw undefined("while guard not a bool")
       }
-      case Out(e) => // FILL ME IN
-      case HAssign(e1, e2) => // FILL ME IN
-      case TAssign(e1, e2) => // FILL ME IN
+      case Out(e) => {
+		// FILL ME IN
+		println(evalTo(e)) // this is what we had in notC interpreter
+        UnitV() // this is what we had in notC interpreter
+	  }
+      case HAssign(e1, e2) => {
+		// FILL ME IN
+		println(e1)
+		println(e2)
+		//val list = gStore(env(eval(e1)))
+		
+		//Check that e1 is a list
+		/*list match {
+			case ListF(v, a) => UnitV()
+			case _ => throw undefined("object not a list")
+		}*/
+		
+		UnitV()
+	  }
+      case TAssign(e1, e2) => UnitV() // FILL ME IN
       case Num(n) => NumV(n)
       case Bool(b) => BoolV(b)
       case Str(str) => StringV(str)
@@ -194,6 +213,9 @@ object Interp {
       case BinOp(bop, e1, e2) => bop match {
 	case Equal => {
 	  // FILL ME IN
+	  val v1 = evalTo(e1) //This is what we had in notC, modify for lists?
+      val v2 = evalTo(e2)
+      BoolV(v1 == v2)
 	}
 	case _ => (evalTo(e1), evalTo(e2)) match {
 	  case (BoolV(b1), BoolV(b2)) => bop match {
@@ -214,7 +236,7 @@ object Interp {
 	    case Lte => BoolV(s1 <= s2)
 	    case _   => throw undefined("illegal operation on strings")
 	  }
-	  case (v:Value, a:Address) => // FILL ME IN
+	  case (v:Value, a:Address) => UnitV()// FILL ME IN
 	  case _ => throw undefined("illegal binary operation")
 	}
       }
@@ -227,11 +249,12 @@ object Interp {
 	case NumT => NumV(BigInt(scala.Console.readLine()))
 	case StrT => StringV(scala.Console.readLine())
       }
-      case Call(ef, es) => // FILL ME IN
-      case NotList(es) => // FILL ME IN
-      case Head(e) => // FILL ME IN
-      case Tail(e) => // FILL ME IN
-      case Block(vbs, t) => // FILL ME IN
+      case Call(ef, es) => UnitV() // FILL ME IN
+      case NotList(es) => UnitV() // FILL ME IN
+      case Head(e) => UnitV() // FILL ME IN
+      case Tail(e) => UnitV() // FILL ME IN
+      case Block(vbs, t) => UnitV() // FILL ME IN
+	  case Fun(f, xs, t) => UnitV() // FILL ME IN (compiler gave warning because this was missing)
     }
 
     evalTo(config.t)
