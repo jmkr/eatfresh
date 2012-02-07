@@ -316,11 +316,21 @@ package cs162.notScheme.interpreter {
 				case Block(vbs, t) => {
 					// FILL ME IN
 					// TODO
+					
 					// This is what we had in notC solution, maybe need to add stuff?
-					val xvs = for ( VarBind(x, e) <- vbs ) yield (x, evalTo(e))
+					/*val xvs = for ( VarBind(x, e) <- vbs ) yield (x, evalTo(e))
 					val newEnv = xvs.foldLeft( env )(
 						(env, xv) => env + (xv._1 -> alloc(xv._2)) )
-						eval(Config(t, newEnv))
+						eval(Config(t, newEnv))*/
+					
+					// New version for notScheme, first allocate dummy values so all variables in scope
+					val xvs = for ( VarBind(x, e) <- vbs ) yield (x, UnitV())
+					val newEnv = xvs.foldLeft( env )( (env, xv) => env + (xv._1 -> alloc(xv._2)) )
+					// Now eval expressions and replace dummy values in new environment
+					val xvs2 = for ( VarBind(x, e) <- vbs ) yield (x, evalTo(e))
+					xvs2.foldLeft()( (a, xv) => gStore(newEnv(xv._1)) = xv._2 )
+					// Eval program with new environment
+					eval(Config(t, newEnv))
 				}
 				case Fun(f, xs, t) => {
 					// FILL ME IN
