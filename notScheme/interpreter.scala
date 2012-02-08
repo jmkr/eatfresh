@@ -289,30 +289,6 @@ package cs162.notScheme.interpreter {
 						val v2 = evalTo(e2)
 						BoolV(v1 == v2)
 					}
-					/*
-					case Cons => (evalTo(e1), evalTo(e2)) match {
-						case (a:Address, a2:Address) => {
-							val lst = gStore(a)
-							val lst2 = gStore(a2)
-							(lst, lst2) match {
-								case (ListF(v3, a3), ListF(v4, a4)) => {
-									makeList(List(v3, a3, v4, a4))
-								}
-							}
-							makeList(List())
-							
-						}
-						case (v:Value, a:Address) => {
-							println(gStore)
-							ListF(v, a)
-						}
-						case (v:Value, v2:Value) => {
-							println(gStore)
-							makeList(List(v, v2))
-						}
-						case _ => throw undefined("illegal operation on lists")
-					}
-					*/
 					case _ => (evalTo(e1), evalTo(e2)) match {
 						case (BoolV(b1), BoolV(b2)) => bop match {
 							case And => BoolV(b1 && b2)
