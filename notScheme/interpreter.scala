@@ -36,7 +36,10 @@ package cs162.notScheme.interpreter {
     def apply(x:Var): Address = {
       env get x match {
         case Some(a) => a
-        case None => throw undefined("free variable")
+        case None => { 
+            throw undefined("free variable")
+        }
+
       }
     }
     def +(tup:Tuple2[Var, Address]): Env = Env(env + tup)
@@ -250,8 +253,6 @@ package cs162.notScheme.interpreter {
                     val lst = gStore(Address(a))
                     lst match {
                       case ListF(v, a2) => {
-                          //println(gStore(Address(evalTo(e2))))
-                          //gStore(a2) = evalTo(e2)
                           val addr = evalTo(e2)
                           addr match {
                             case Address(a3) => {
@@ -282,8 +283,6 @@ package cs162.notScheme.interpreter {
         case BinOp(bop, e1, e2) => bop match {
             case Equal => {
                 // FILL ME IN
-                // TODO
-                //This is what we had in notC, modify to add support for lists (slide 28 in http://cs.ucsb.edu/~benh/cs162/slides/04-notScheme.pdf)
                 val v1 = evalTo(e1)
                 val v2 = evalTo(e2)
                 BoolV(v1 == v2)
@@ -314,10 +313,6 @@ package cs162.notScheme.interpreter {
                         val v2 = gStore(a)
                         v2 match {
                           case ListF(v1, a1) => {
-                              //println(v)
-                              //println(v1)
-                              //println(gStore(a1))
-                              //println(v2)
                               val ls = makeList(List(v))
                               val lst = gStore(ls)
                               lst match {
@@ -365,12 +360,13 @@ package cs162.notScheme.interpreter {
                     whatever.map( m => {
                         gStore(e(m._1)) = evalTo(m._2)
                       }  ) //x:name, v:value
-                    val e2 = Env(e.env+( f.f -> env(f.f)) )
-                    println(e2)
-                    //println(gStore)
-                    //println(e)
-                    //gStore(e()) = address
-                    eval(Config(f.t, e2))
+                    ef match {
+                      case Var(x) => {
+                        val e2 = Env(e.env+( f.f -> env(Var(x))) )
+eval(Config(f.t, e2))
+                      }
+                      case _ => throw undefined("panic!")
+                     }
                   }
 
                 } 
@@ -410,27 +406,16 @@ package cs162.notScheme.interpreter {
         case Block(vbs, t) => {
             // FILL ME IN
 					
-            // This is what we had in notC solution, maybe need to add stuff?
-            /*val xvs = for ( VarBind(x, e) <- vbs ) yield (x, evalTo(e))
-             val newEnv = xvs.foldLeft( env )(
-             (env, xv) => env + (xv._1 -> alloc(xv._2)) )
-             eval(Config(t, newEnv))*/
-					
-            // New version for notScheme, first allocate dummy values so all variables in scope
             val xvs = for ( VarBind(x, e) <- vbs ) yield (x, UnitV())
             val newEnv = xvs.foldLeft( env )( (env, xv) => env + (xv._1 -> alloc(xv._2)) )
-            // Now eval expressions and replace dummy values in new environment
             val xvs2 = for ( VarBind(x, e) <- vbs ) yield (x, evalTo(e))
             xvs2.foldLeft()( (a, xv) => gStore(newEnv(xv._1)) = xv._2 )
 
-            // Eval program with new environment
             eval(Config(t, newEnv))
           }
         case Fun(f, xs, t) => {
             // FILL ME IN
-            // TODO
             val e = xs.foldLeft( env.env )( (a,b) => a+(b -> alloc(UnitV()))  )
-            println(e)
             FunClo( e, Fun(f, xs, t) )
           }
       }
