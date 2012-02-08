@@ -315,10 +315,18 @@ package cs162.notScheme.interpreter {
 					case NumT => NumV(BigInt(scala.Console.readLine()))
 					case StrT => StringV(scala.Console.readLine())
 				}
-				case Call(ef, es) => {
+				case Call(ef, es) => ef match{
 					// FILL ME IN
-					// TODO
-					UnitV()
+					case Fun(f, xs, t) => {
+						evalTo(ef)
+						if(es.length != xs.length) throw undefined("arguments and parameters don't match")
+						else{
+							xs.foldLeft(UnitV(): Value)((b,a) => evalTo(a))
+							evalTo(t)
+							es.foldLeft(UnitV(): Value)((b,a) => evalTo(a))
+						}
+					}
+					case _ => throw undefined("illegal operation on function call")
 				}
 				case NotList(es) => {
 					// FILL ME IN
