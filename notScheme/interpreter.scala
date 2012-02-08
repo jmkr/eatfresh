@@ -203,15 +203,24 @@ package cs162.notScheme.interpreter {
 				}
 				case Out(e) => evalTo(e) match {
 					// FILL ME IN
-					case ListF(v, a) => {
-						print("[")
-						printList( evalTo(e) )
-						print("]\n")
-						UnitV()
-					}
-					case Empty() => {
-						print("[]\n")
-						UnitV()
+					case Address(a) => {
+						val lst = gStore(Address(a))
+						lst match {
+							case ListF(v, a) => {
+								print("[")
+								printList( lst )
+								print("]\n")
+								UnitV()
+							}
+							case Empty() => {
+								print("[]\n")
+								UnitV()
+							}
+							case _ => {
+								println(evalTo(e)) 
+								UnitV()
+							}
+						}
 					}
 					case _ => { println(evalTo(e)) }
 					UnitV()
@@ -226,10 +235,10 @@ package cs162.notScheme.interpreter {
 									gStore(Address(a)) = ListF(evalTo(e2), a2)
 									UnitV()
 								}
+								case Empty() => throw undefined("assigning to head of empty list")
 								case _ => throw undefined("taking the head of a non-list")
 							}
 						}
-						case Empty() => throw undefined("assigning to head of empty list")
 						case _ => throw undefined("assigning to head of a non-list")
 					}
 					case _ => throw undefined("assigning to head of a non-list")
@@ -250,16 +259,17 @@ package cs162.notScheme.interpreter {
 											gStore(Address(a)) = ListF(v, Address(a3))
 											UnitV()
 										}
-										case _ => throw undefined("taking the tail of a non-list")
+										case Empty() => throw undefined("assigning to tail of empty list")
+										case _ => throw undefined("bad tail assignment")
 									}
 								}
-								case _ => throw undefined("taking the tail of a non-list")
+								case Empty() => throw undefined("assigning to tail of empty list")
+								case _ => throw undefined("bad tail assignment")
 							}
 						}
-						case Empty() => throw undefined("assigning to tail of empty list")
-						case _ => throw undefined("assigning to tail of a non-list")
+						case _ => throw undefined("bad tail assignment")
 					}
-					case _ => throw undefined("assigning to tail of a non-list")
+					case _ => throw undefined("bad tail assignment")
 				}
 				case Num(n) => NumV(n)
 				case Bool(b) => BoolV(b)
@@ -279,6 +289,30 @@ package cs162.notScheme.interpreter {
 						val v2 = evalTo(e2)
 						BoolV(v1 == v2)
 					}
+					/*
+					case Cons => (evalTo(e1), evalTo(e2)) match {
+						case (a:Address, a2:Address) => {
+							val lst = gStore(a)
+							val lst2 = gStore(a2)
+							(lst, lst2) match {
+								case (ListF(v3, a3), ListF(v4, a4)) => {
+									makeList(List(v3, a3, v4, a4))
+								}
+							}
+							makeList(List())
+							
+						}
+						case (v:Value, a:Address) => {
+							println(gStore)
+							ListF(v, a)
+						}
+						case (v:Value, v2:Value) => {
+							println(gStore)
+							makeList(List(v, v2))
+						}
+						case _ => throw undefined("illegal operation on lists")
+					}
+					*/
 					case _ => (evalTo(e1), evalTo(e2)) match {
 						case (BoolV(b1), BoolV(b2)) => bop match {
 							case And => BoolV(b1 && b2)
@@ -298,11 +332,40 @@ package cs162.notScheme.interpreter {
 							case Lte => BoolV(s1 <= s2)
 							case _   => throw undefined("illegal operation on strings")
 						}
+						
 						case (v:Value, a:Address) => bop match {
-							// FILL ME IN
-							case Cons => ListF(v, a)
-							case _ => throw undefined("illegal operation on lists")
+							case Cons => {
+								
+								val v2 = gStore(a)
+								v2 match {
+									case ListF(v1, a1) => {
+										//println(v)
+										//println(v1)
+										//println(gStore(a1))
+										//println(v2)
+										val ls = makeList(List(v))
+										val lst = gStore(ls)
+										lst match {
+											case ListF(v3, a3) => {
+												gStore(a3) = v2
+											}
+											case _ => throw undefined("we fucked up")
+										}
+										return ls
+									}
+									case Empty() => {
+										makeList(List(v))
+									}
+									case _ => {
+										makeList(List(v, v2))
+									}
+								}
+								
+								//makeList(List(v, gStore(a)))
+							}
+							case _    => throw undefined("illegal operation on lists")
 						}
+						
 						case _ => throw undefined("illegal binary operation")
 					}
 				}
@@ -330,9 +393,11 @@ package cs162.notScheme.interpreter {
 						val lst = gStore(Address(a))
 						lst match {
 							case ListF(v, a) => v
+							case Empty() => throw undefined("taking the head of an empty list")
 							case _ => throw undefined("taking the head of a non-list")
 						}
 					}
+					case Empty() => throw undefined("taking the head of an empty list")
 					case _ => throw undefined("taking the head of a non-list")
 				}
 				case Tail(e) => evalTo(e) match {
@@ -341,9 +406,11 @@ package cs162.notScheme.interpreter {
 						val lst = gStore(Address(a))
 						lst match {
 							case ListF(v, a) => gStore(a)
+							case Empty() => throw undefined("taking the tail of an empty list")
 							case _ => throw undefined("taking the tail of a non-list")
 						}
 					}
+					case Empty() => throw undefined("taking the tail of an empty list")
 					case _ => throw undefined("taking the tail of a non-list")
 				}
 				case Block(vbs, t) => {
@@ -361,11 +428,6 @@ package cs162.notScheme.interpreter {
 					// Now eval expressions and replace dummy values in new environment
 					val xvs2 = for ( VarBind(x, e) <- vbs ) yield (x, evalTo(e))
 					xvs2.foldLeft()( (a, xv) => gStore(newEnv(xv._1)) = xv._2 )
-
-					
-					//Debug
-					//println(newEnv)
-					//println(gStore)
 
 					// Eval program with new environment
 					eval(Config(t, newEnv))
