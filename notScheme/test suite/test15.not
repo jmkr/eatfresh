@@ -1,0 +1,5 @@
+var
+  sm = sum(list) => {if (list=[]) 0 else list.head + sum(list.tail)},
+  list = [3, 5, 9]
+in
+output sm(list)

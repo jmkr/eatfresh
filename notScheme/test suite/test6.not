@@ -1,0 +1,7 @@
+var
+  sum = sum(list) => 
+  {
+    if (list=[]) 0 else list.head + sum(list.tail)
+  }
+in 
+output sum([1, 2, 3])

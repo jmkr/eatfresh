@@ -1,0 +1,2 @@
+var list = [1, 2] in list.head := 3;
+output list
