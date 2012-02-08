@@ -301,6 +301,9 @@ package cs162.notScheme.interpreter {
 						case (v:Value, a:Address) => bop match {
 							// FILL ME IN
 							case Cons => ListF(v, a)
+                                                          println(v)
+                                                          println(gStore(a))
+                                                          UnitV()
 							case _ => throw undefined("illegal operation on lists")
 						}
 						case _ => throw undefined("illegal binary operation")
@@ -373,7 +376,7 @@ package cs162.notScheme.interpreter {
 				case Fun(f, xs, t) => {
 					// FILL ME IN
 					// TODO
-					UnitV()
+					FunClo(Env(), Fun(f, xs, t))
 				}
 			}
     
