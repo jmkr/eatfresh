@@ -344,13 +344,13 @@ package cs162.notScheme.interpreter {
           }
         case Block(vbs, t) => {
 					
-            val newenv = (for ( VarBind(x, e) <- vbs ) yield (x, UnitV()) ).foldLeft( env )( (env, xv) => env + (xv._1 -> alloc(xv._2)) )
-            (for ( VarBind(x, e) <- vbs ) yield (x, evalTo(e))).foldLeft()( (a, xv) => gStore(newenv(xv._1)) = xv._2 )
+            val newenv = (for ( VarBind(x, e) <- vbs ) yield (x, UnitV())).foldLeft(env)((env,xv) => env + (xv._1 -> alloc(xv._2)))
+            (for (VarBind(x, e) <- vbs) yield (x, evalTo(e))).map {xv => gStore(newenv(xv._1)) = xv._2}
 
             eval(Config(t, newenv))
           }
         case Fun(f, xs, t) => {
-            FunClo( xs.foldLeft( env.env )( (a,b) => a+(b -> alloc(UnitV())) ), Fun(f, xs, t) )
+            FunClo(xs.foldLeft(env.env)((a,b) => a+(b -> alloc(UnitV()))), Fun(f,xs,t))
           }
       }
  
