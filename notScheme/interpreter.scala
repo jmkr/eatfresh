@@ -387,11 +387,11 @@ package cs162.notScheme.interpreter {
                 val lst = gStore(Address(a))
                 lst match {
                   case ListF(v, a) => v
-                  case Empty() => throw undefined("taking the head of an empty list")
+                  case Empty() => throw undefined("taking the head of an empty list1")
                   case _ => throw undefined("taking the head of a non-list")
                 }
               }
-            case Empty() => throw undefined("taking the head of an empty list")
+            case Empty() => throw undefined("taking the head of an empty list1")
             case _ => throw undefined("taking the head of a non-list")
           }
         case Tail(e) => evalTo(e) match {
@@ -399,7 +399,7 @@ package cs162.notScheme.interpreter {
             case Address(a) => {
                 val lst = gStore(Address(a))
                 lst match {
-                  case ListF(v, a) => gStore(a)
+                  case ListF(v, a) => alloc(gStore(a))
                   case Empty() => throw undefined("taking the tail of an empty list")
                   case _ => throw undefined("taking the tail of a non-list")
                 }
