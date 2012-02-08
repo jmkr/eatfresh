@@ -2,7 +2,8 @@ import java.io._
 import scala.io._
 import cs162.notScheme.syntax._
 import scala.collection.mutable.{Map => MMap}
-
+//kenneth hwang
+//john meeker
 object notScheme {
   import cs162.notScheme.interpreter._
   import SemanticHelpers._
@@ -172,8 +173,7 @@ package cs162.notScheme.interpreter {
  
             case x:Var => gStore(env(x)) match {
                 case Address(a) => {
-                    val lst = gStore(Address(a))
-                    lst match {
+                    gStore(Address(a)) match {
                       case ListF(v, a2) => {
                           gStore(Address(a)) = ListF(evalTo(e2), a2)
                           UnitV()
