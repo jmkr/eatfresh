@@ -1,0 +1,2 @@
+var
+  cat = { "sound": "Mew"}inoutput cat."sound"

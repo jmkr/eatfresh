@@ -1,0 +1,8 @@
+var	
+	cat = {"a":unit,
+	"b": (self, x) => {cat."a":=x}
+},
+l=unit
+in
+cat."b"["Hello"];
+output cat."a"

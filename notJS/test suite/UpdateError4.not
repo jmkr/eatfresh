@@ -1,0 +1,2 @@
+var x = { "true": 3 } in x.true := 1
+

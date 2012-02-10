@@ -1,0 +1,106 @@
+<< takes a set of symbols and their weights (a measure of frequency)
+   and performs Huffman Encoding to generate a prefix code for each
+   symbol.
+>>
+
+var
+sortedList = {
+  "head" : unit,
+  "tail" : unit,
+
+  "getTail" : (self) => 
+  {
+    if (self."tail" = unit) self."tail" := { "proto": sortedList };
+    self."tail"
+  },
+
+  "isEmpty" : (self) => { self."head" = unit },
+
+  "insert" : (self, x) => 
+  {
+    if (self."head" = unit) self."head" := x
+    else if ((self."head")."getValue"[] <= x."getValue"[])
+      (self."getTail"[])."insert"[x]
+    else {
+      var tmp = self."head" in
+      self."head" := x;
+      self."tail" := { "head": tmp, "tail": self."tail", "proto": sortedList }
+    }
+  },
+
+  "popMin" : (self) =>
+  {
+    var min = self."head" in
+    if (!(self."tail" = unit)) {
+      self."head" := (self."tail")."head";
+      self."tail" := (self."tail")."tail"
+    }
+    else self."head" := unit;
+    min
+  },
+
+  "print" : (self) => 
+  {
+    if (!(self."head" = unit)) {
+      output self."head";
+      if (!(self."tail" = unit)) (self."tail")."print"[]
+    }
+  }
+},
+
+huffNode = {
+  "symbol" : "",
+  "weight" : 0,
+  "left"   : unit,
+  "right"  : unit,
+
+  "getValue" : (self) => { self."weight" },
+
+  "print" : (self, code) =>
+  {
+    if (self."symbol" = "") {
+      if (!(self."left" = unit)) (self."left")."print"[code + "0"];
+      if (!(self."right" = unit)) (self."right")."print"[code + "1"]
+    }
+    else output self."symbol" + " = " + code
+  }
+},
+
+get_symw = f() =>
+{
+  var sym = "", weight = 0 in
+  output "next symbol (<enter> to stop):";
+  sym := input str;
+
+  if (!(sym = "")) {
+    output "symbol's weight?";
+    weight := input num
+  };
+
+  { "symbol" : sym, "weight" : weight, "proto" : huffNode }  
+},
+
+buildTree = buildTree(list) =>
+{
+  var min1 = list."popMin"[], min2 = unit, newNode = unit in
+  if (list."isEmpty"[]) min1
+  else {
+    min2 := list."popMin"[];
+    newNode := { "weight": min1."weight" + min2."weight",
+                 "left": min1, "right": min2, "proto": huffNode };
+    list."insert"[newNode];
+    buildTree(list)
+  }
+},
+
+symw = unit,
+list = { "proto": sortedList }
+in
+
+symw := get_symw();
+while (!(symw."symbol" = "")) {
+  list."insert"[symw];
+  symw := get_symw()
+};
+
+buildTree(list)."print"[""]
