@@ -138,16 +138,16 @@ object SemanticHelpers {
   def lookProto(o:Object, str:String): Value = {
     // FILL ME IN
     o get str match {  // if str exists in o return o(str)
-      case Some(v) => v
+      case Value => v
       case _ => {
         o("proto") match { // else find "proto" and recurse through object
           case Address(a) => {
             gStore(Address(a)) match {
               case Object(m) => lookProto(Object(m), str)
-              case _ => UnitV()
+              case _ => throw undefined("hello world1")
             }
           } 
-          case _ => UnitV()
+          case _ => { println(o(str)); throw undefined("hello world2") }
         }
       }
     }
@@ -219,6 +219,7 @@ def eval(config:Config): Value = {
 				case _ => throw undefined("outputting illegal value")
 			}
 			println(val2str(evalTo(e)))*/
+			println(e)
 			println(evalTo(e))
 			UnitV()
 		}
@@ -335,10 +336,19 @@ def eval(config:Config): Value = {
 		}*/
 		case Obj(fbs) => {
 			// FILL ME IN
-			UnitV()
+			alloc( fbs.foldLeft(Object(Map[String, Value]()))( (a, b) => a + (b.s.str -> alloc(evalTo(b.e))) ) )
 		}
-		case Access(e1, e2) => {
+		case Access(e1, e2) => (evalTo(e1), e2) match {
 			// FILL ME IN
+			case (a:Address, s:Str) => gStore(a) match { 
+				case o @ Object(m) => lookProto(o, s.str)
+				case _ => throw undefined("illegal object field access")
+			}
+			case _ => {
+				/*println(e1, e2)
+				println(evalTo(e1), evalTo(e2))*/
+				throw undefined("illegal object field access")
+			}
 			UnitV()
 		}
 		case Method(xs, t) => {
