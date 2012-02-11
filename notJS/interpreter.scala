@@ -135,8 +135,25 @@ object SemanticHelpers {
   }
 
   // look up a field in the prototype chain of a record
-  def lookProto(o:Object, str:String): Value = 
+  def lookProto(o:Object, str:String): Value = {
     // FILL ME IN
+    o get str match {  // if str exists in o return o(str)
+      case Some(v) => v
+      case _ => {
+        o("proto") match { // else find "proto" and recurse through object
+          case Address(a) => {
+            gStore(Address(a)) match {
+              case Object(m) => lookProto(Object(m), str)
+              case _ => UnitV()
+            }
+          } 
+          case _ => UnitV()
+        }
+      }
+    }
+    UnitV()
+  }
+    
 }
 
 //---------- INTERPRETER ----------
@@ -166,6 +183,11 @@ object Interp {
   // the evaluation function [[.]] \in Config -> Value
   def eval(config:Config): Value = {
     // FILL ME IN
+    def evalTo(t:Term): Value = t match {
+      case _ => UnitV()
+    }
+
+    evalTo(config.t)
   }
 }
 
