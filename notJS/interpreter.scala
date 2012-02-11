@@ -136,13 +136,14 @@ object SemanticHelpers {
 
   // look up a field in the prototype chain of a record
   def lookProto(o:Object, str:String): Value = {
+	println(str)
     o(str) match {  // if str exists in o return o(str)
       case Address(a) => gStore(Address(a))
       case _ => {
         o("proto") match { // else find "proto" and recurse through object
           case Address(a) => {
             gStore(Address(a)) match {
-              case Object(m) => lookProto(Object(m), str)
+              case Object(m) => { println("moving up to"); lookProto(Object(m), str) }
               case _ => UnitV()
             }
           } 
@@ -212,10 +213,10 @@ def eval(config:Config): Value = {
 				case Object(m) => {
 					if(m.size==0) ""
 					else {
-						m.foldLeft("") ( (s, b) => b._2 match { case Address(a2) => s + ", " + b._1 + " : " + val2str(Address(a2)); case _ => s } )
+						m.foldLeft("") ( (s, b) => b._2 match { case Address(a2) => s + ", " + b._1 + " : " + val2str(gStore(Address(a2))); case _ => s } )
 					}
 				}
-				case _ => throw undefined("obj2str not implemented yet")
+				case _ => throw undefined("error in Out")
 			}
 			println(val2str(evalTo(e)))
 			UnitV()
@@ -314,11 +315,14 @@ def eval(config:Config): Value = {
 							(env, xv) => env + (xv._1 -> alloc(xv._2)))
 							eval(Config(t, newEnv))
 					}
-					case _ => throw undefined("calling a non-closure")
+					case _ => {
+						println(lookProto(o, s.str))
+						throw undefined("calling a non-method1")
+					}
 				}
-				case _ => throw undefined("calling a non-closure")
+				case _ => throw undefined("calling a non-method")
 			}
-			case _ => throw undefined("calling a non-closure")
+			case _ => throw undefined("calling a non-method")
 		}
 		case Call(ef, es) => evalTo(ef) match {
 			case clo @ FunClo(cloEnv, Fun(f, xs, t)) => {
