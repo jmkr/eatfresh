@@ -137,21 +137,20 @@ object SemanticHelpers {
   // look up a field in the prototype chain of a record
   def lookProto(o:Object, str:String): Value = {
     // FILL ME IN
-    o get str match {  // if str exists in o return o(str)
-      case Value => v
+    o(str) match {  // if str exists in o return o(str)
+      case Address(a) => gStore(Address(a))
       case _ => {
         o("proto") match { // else find "proto" and recurse through object
           case Address(a) => {
             gStore(Address(a)) match {
               case Object(m) => lookProto(Object(m), str)
-              case _ => throw undefined("hello world1")
+              case _ => UnitV()
             }
           } 
-          case _ => { println(o(str)); throw undefined("hello world2") }
+          case _ => UnitV()
         }
       }
     }
-    UnitV()
   }
     
 }
@@ -205,28 +204,36 @@ def eval(config:Config): Value = {
 			case _ => throw undefined("while guard not a bool")
 		}
 		case Out(e) => {
-			/*def val2str(v:Value): String = v match {
-				case a:Address => "{" + list2str(a) + "}"
+			def val2str(v:Value): String = v match {
+				case a:Address => "{" + obj2str(a) + "}"
 				case StringV(s) if s == "" => "\"\""
 				case other => other.toString
 			}
 			def obj2str(a:Address): String = gStore(a) match {
-				case Empty() => ""
-				case Object(m) => val2str(v) + (obj2str(a) match {
-					case "" => ""
-					case s  => ", " + s
-				})
-				case _ => throw undefined("outputting illegal value")
+				case _ => throw undefined("obj2str not implemented yet")
 			}
-			println(val2str(evalTo(e)))*/
-			println(e)
-			println(evalTo(e))
+			println(val2str(evalTo(e)))
 			UnitV()
 		}
 		case Update(e1, e2, e3) => (evalTo(e1), evalTo(e2), evalTo(e3)) match {
 			//Fill 
-			case(a:Address, s:StringV, v:Value) => UnitV()
-			case _ => UnitV()
+			case (a:Address, s:StringV, v:Value) => gStore(a) match { 
+				case o @ Object(m) => {
+					o(s.str) match {
+						case adr @ Address(a2) => { 
+							gStore(adr) = v
+							UnitV()
+						}
+						case _ => {
+							gStore(a) = o + (s.str -> alloc(v))
+							UnitV()
+						}
+					}
+				}
+				case _ => throw undefined("illegal object update")
+			}
+			case _ => throw undefined("illegal object update")
+			UnitV()
 		}
 		/*case HAssign(e1, e2) => (evalTo(e1), evalTo(e2)) match {
 			case (a:Address, v:Value) => gStore(a) match {
@@ -338,18 +345,13 @@ def eval(config:Config): Value = {
 			// FILL ME IN
 			alloc( fbs.foldLeft(Object(Map[String, Value]()))( (a, b) => a + (b.s.str -> alloc(evalTo(b.e))) ) )
 		}
-		case Access(e1, e2) => (evalTo(e1), e2) match {
+		case Access(e1, e2) => (evalTo(e1), evalTo(e2)) match {
 			// FILL ME IN
-			case (a:Address, s:Str) => gStore(a) match { 
+			case (a:Address, s:StringV) => gStore(a) match { 
 				case o @ Object(m) => lookProto(o, s.str)
 				case _ => throw undefined("illegal object field access")
 			}
-			case _ => {
-				/*println(e1, e2)
-				println(evalTo(e1), evalTo(e2))*/
-				throw undefined("illegal object field access")
-			}
-			UnitV()
+			case _ => throw undefined("illegal object field access")
 		}
 		case Method(xs, t) => {
 			// FILL ME IN
