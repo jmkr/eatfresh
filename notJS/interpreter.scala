@@ -136,18 +136,21 @@ object SemanticHelpers {
 
   // look up a field in the prototype chain of a record
   def lookProto(o:Object, str:String): Value = {
-	println(str)
     o(str) match {  // if str exists in o return o(str)
       case Address(a) => gStore(Address(a))
       case _ => {
         o("proto") match { // else find "proto" and recurse through object
           case Address(a) => {
             gStore(Address(a)) match {
-              case Object(m) => { println("moving up to"); lookProto(Object(m), str) }
-              case _ => UnitV()
+              case Object(m) => lookProto(Object(m), str)
+              case Address(a2) => gStore(Address(a2)) match {
+              	case Object(m) => lookProto(Object(m), str) 
+              	case _ => throw undefined("proto isn't an address")
+              }
+              case _ => throw undefined("proto isn't an address")
             }
           } 
-          case _ => UnitV()
+          case _ => throw undefined("proto isn't an address")
         }
       }
     }
@@ -316,8 +319,7 @@ def eval(config:Config): Value = {
 							eval(Config(t, newEnv))
 					}
 					case _ => {
-						println(lookProto(o, s.str))
-						throw undefined("calling a non-method1")
+						throw undefined("calling a non-method")
 					}
 				}
 				case _ => throw undefined("calling a non-method")
