@@ -209,12 +209,12 @@ def eval(config:Config): Value = {
 				case other => other.toString
 			}
 			def obj2str(a:Address): String = gStore(a) match {
-        case Object(m) => {
-          if(m.size==0) ""
-          else {
-            m.foldLeft("") ( (s, b) => b._2 match { case Address(a2) => s + ", " + b._1 + " : " + gStore(Address(a2)); case _ => s } )
-          }
-        }
+				case Object(m) => {
+					if(m.size==0) ""
+					else {
+						m.foldLeft("") ( (s, b) => b._2 match { case Address(a2) => s + ", " + b._1 + " : " + val2str(Address(a2)); case _ => s } )
+					}
+				}
 				case _ => throw undefined("obj2str not implemented yet")
 			}
 			println(val2str(evalTo(e)))
@@ -295,40 +295,54 @@ def eval(config:Config): Value = {
 			alloc( fbs.foldLeft(Object(Map[String, Value]()))( (a, b) => a + (b.s.str -> alloc(evalTo(b.e))) ) )
 		}
 		case Access(e1, e2) => (evalTo(e1), evalTo(e2)) match {
-			// FILL ME IN
 			case (a:Address, s:StringV) => gStore(a) match { 
 				case o @ Object(m) => lookProto(o, s.str)
 				case _ => throw undefined("illegal object field access")
 			}
 			case _ => throw undefined("illegal object field access")
 		}
-		case MCall(eO, eF, es) => {
+		case MCall(eO, eF, es) => (evalTo(eO), evalTo(eF)) match {
 			// FILL ME IN
-			UnitV()
+			case (a:Address, s:StringV) => gStore(a) match {
+				case o @ Object(m) => lookProto(o, s.str) match {
+					case clo @ MethClo(cloEnv, Method(xs, t)) => {
+						if (xs.length != es.length) 
+							throw undefined("arguments and parameters don't match")
+            		
+						val xv = (Var("self") :: xs) zip (a :: (es map evalTo))
+						val newEnv = xv.foldLeft( cloEnv )(
+							(env, xv) => env + (xv._1 -> alloc(xv._2)))
+							eval(Config(t, newEnv))
+					}
+					case _ => throw undefined("calling a non-closure")
+				}
+				case _ => throw undefined("calling a non-closure")
+			}
+			case _ => throw undefined("calling a non-closure")
 		}
-    case Call(ef, es) => evalTo(ef) match {
-      case clo @ FunClo(cloEnv, Fun(f, xs, t)) => {
-        if (xs.length != es.length) 
-          throw undefined("arguments and parameters don't match")
+		case Call(ef, es) => evalTo(ef) match {
+			case clo @ FunClo(cloEnv, Fun(f, xs, t)) => {
+				if (xs.length != es.length) 
+					throw undefined("arguments and parameters don't match")
 
-        val xv = (f :: xs) zip (clo :: (es map evalTo))
-        val newEnv = xv.foldLeft( cloEnv )(
-          (env, xv) => env + (xv._1 -> alloc(xv._2)))
-          eval(Config(t, newEnv))
-      }
-      case _ => throw undefined("calling a non-closure")
-    }
+				val xv = (f :: xs) zip (clo :: (es map evalTo))
+				val newEnv = xv.foldLeft( cloEnv )(
+					(env, xv) => env + (xv._1 -> alloc(xv._2)))
+					eval(Config(t, newEnv))
+			}
+			case _ => throw undefined("calling a non-closure")
+		}
 		case Block(vbs, t) => {
 			val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitV())
 			val newEnv = dummies.foldLeft( env )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
-      for ( VarBind(x, e) <- vbs ) gStore(newEnv(x)) = eval(Config(e, newEnv))
+			for ( VarBind(x, e) <- vbs ) gStore(newEnv(x)) = eval(Config(e, newEnv))
 			eval(Config(t, newEnv))
 		}
 		case f:Fun => FunClo(env, f)
-    case m:Method => MethClo(env, m)
+		case m:Method => MethClo(env, m)
 	}
 
-		evalTo(config.t)
+	evalTo(config.t)
 	}
 }
 
