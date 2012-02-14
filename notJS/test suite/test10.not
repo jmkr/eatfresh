@@ -1,5 +1,6 @@
 var	
 	cat = {"a":unit,
 	"b": (self) => {output "CAT" }
-}in
+}
+in
 cat."b"[]

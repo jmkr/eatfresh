@@ -1,3 +1,8 @@
+// James Ebentier
+// David Schnurr
+// Vincent Alindogan
+
+
 import java.io._
 import scala.io._
 import cs162.notJS.syntax._
