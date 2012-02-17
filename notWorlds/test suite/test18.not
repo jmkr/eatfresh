@@ -1,0 +1,10 @@
+var	
+	cat = {"a":unit, "b":unit,
+	"assign": (self, x,y) => {cat."a":=x ; cat."b":=y},
+	"print": (self) => {
+		if(!((self."a")=unit))  output self."a"; output self."b"
+	}
+}
+in
+cat."assign"["Hello","Love"];
+cat."print"[]

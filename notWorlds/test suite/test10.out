@@ -1,0 +1,7 @@
+[, a : unit, b : <closure>]
+Parse error: ``}'' expected but `self' found
+At line 5, column 3
+		self
+
+		^
+CAT

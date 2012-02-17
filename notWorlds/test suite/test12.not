@@ -1,0 +1,6 @@
+var	
+	cat = {"a":unit,
+	"b": (self) => {self."a":="Hello" }
+}in
+cat."b"[];
+output cat."a"

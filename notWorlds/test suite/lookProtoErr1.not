@@ -1,0 +1,2 @@
+var obj = {"proto": obj} in obj."foo"
+

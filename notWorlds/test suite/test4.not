@@ -1,0 +1,3 @@
+var	
+	cat = {"sn":"Mew"}in
+cat."sn":="Gav";output cat."sn"

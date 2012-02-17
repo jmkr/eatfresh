@@ -1,0 +1,7 @@
+var
+    a = unit
+in
+a := thisWorld;
+within a {
+    output "hello"
+}
