@@ -83,6 +83,14 @@ case class Object(o:Map[String, Value] = Map()) extends Value {
   def +(tup:Tuple2[String, Value]): Object = Object(o + tup)
   override def toString = o.toString
 }
+case class World(o:Map[String, Value] = Map()) extends Value {
+  def apply(str:String): Value = {
+    o get str match {
+      case Some(v) => v
+      case None => UnitV()
+    }
+  }
+}
 sealed abstract class Closure extends Value {
   override def toString = "<closure>" 
 }
@@ -303,16 +311,35 @@ def eval(config:Config): Value = {
 		case Obj(fbs) => {
 			alloc( fbs.foldLeft(Object(Map[String, Value]()))( (a, b) => a + (b.s.str -> alloc(evalTo(b.e))) ) )
 		}
-		case Access(e1, e2) => (evalTo(e1), evalTo(e2)) match {
-			case (a:Address, s:StringV) => gStore(a) match { 
+		case Access(e1, e2) => (evalTo(e1), e2) match {
+			case (a:Address, s:Str) => gStore(a) match { 
 				case o @ Object(m) => lookProto(o, s.str)
+				case _ => throw undefined("illegal object field access")
+			}
+			case (w @ World(m), c:Call) => c.ef match {
+				case Var(x) => x match {
+					case "sprout" => {
+						// FILL ME IN
+						// sprout a mothafuckin in this bitch
+						println("foundsprout")
+						UnitV()
+					}
+					case "commit" => {
+						println("foundcommit")
+						UnitV()
+					}
+					case "update" => {
+						println("foundupdate")
+						UnitV()
+					}
+					case _ => throw undefined("illegal object field access")
+				}
 				case _ => throw undefined("illegal object field access")
 			}
 			case _ => throw undefined("illegal object field access")
 		}
 		case Within(w, t) => UnitV()
 		case MCall(eO, eF, es) => (evalTo(eO), evalTo(eF)) match {
-			// FILL ME IN
 			case (a:Address, s:StringV) => gStore(a) match {
 				case o @ Object(m) => lookProto(o, s.str) match {
 					case clo @ MethClo(cloEnv, Method(xs, t)) => {
@@ -345,9 +372,11 @@ def eval(config:Config): Value = {
 			case _ => throw undefined("calling a non-closure")
 		}
 		case Block(vbs, t) => {
-			val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitV())
+			val worldVbs = List(VarBind(Var("thisWorld"), NotUnit())) ::: vbs  //add thisworld first
+			val dummies = for ( VarBind(x,_) <- worldVbs ) yield (x, UnitV())
 			val newEnv = dummies.foldLeft( env )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
-			for ( VarBind(x, e) <- vbs ) gStore(newEnv(x)) = eval(Config(e, newEnv))
+			for ( VarBind(x, e) <- worldVbs ) gStore(newEnv(x)) = eval(Config(e, newEnv))
+			gStore(newEnv(Var("thisWorld"))) = World(Map[String, Value]()) //set thisWorld using current environment
 			eval(Config(t, newEnv))
 		}
 		case f:Fun => FunClo(env, f)

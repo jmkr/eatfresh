@@ -30,7 +30,7 @@ case class Not(e:Exp) extends Exp
 case class BinOp(op:Bop, e1:Exp, e2:Exp) extends Exp
 case class If(e:Exp, t1:Term, t2:Term) extends Exp
 case class In(typ:InputType) extends Exp
-case class Within(wor:Var, block:Term) extends Exp
+case class Within(world:Var, block:Term) extends Exp
 case class Call(ef:Exp, es:List[Exp]) extends Exp
 case class Block(vds:List[VarBind], t:Term) extends Exp
 case class Fun(f:Var, xs:List[Var], t:Term) extends Exp
@@ -204,11 +204,11 @@ object PrettyPrint {
 	printNode(myLbl, "input " + ts)
 	myLbl
       }
-      case Within(Var(wor), block) => {
+      case Within(Var(world), block) => {
 	var blockLbl = output(block)
 	val myLbl = getid
 	
-	printNode(myLbl, "within: " + wor)
+	printNode(myLbl, "within: " + world)
 	printEdges(myLbl, List(blockLbl))
 	myLbl
       }
@@ -308,7 +308,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   // reserved keywords
   lexical.reserved += ( "var", "if", "else", "while", "true",
 		       "false", "input", "output", "unit",
-		       "num", "str", "in", "self", "within")
+		       "num", "str", "in", "self", "within", "thisWorld")
 
   lexical.delimiters += ( "+", "-", "*", "/", "!", "&", "|", "=",
 			 "<=", "{", "}", "(", ")", ":=", ";", ",",
@@ -378,6 +378,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
     | boolP
     | strP
     | unitP
+    | thisworldP
     | varP
     | "(" ~> ExpP <~ ")"
   )
@@ -462,7 +463,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
 
   // Within
   lazy val withinP: P[Within] = "within" !!! "within" ~> varP ~ ("{" ~> TermP <~ "}") ^^
-  { case wor ~ block => Within(wor, block) }
+  { case world ~ block => Within(world, block) }
 
   // block
   lazy val blockP: P[Block] = "var" !!! "var" ~> rep1sep(vbindP, ",") ~ ("in" ~> (("{" ~> TermP <~ "}") | TermP)) ^^
@@ -493,6 +494,9 @@ object ParseL extends StandardTokenParsers with PackratParsers {
 
   // self
   lazy val selfP: P[Var] = "self" ^^^ (Var("self"))
+
+  // thisWorld
+  lazy val thisworldP: P[Var] = "thisWorld" ^^^ (Var("thisWorld"))
 
   // method calls
   lazy val mcallP: P[MCall] = "mcall" !!! ((selfP | E) <~ ".") ~ ExpP ~ ("[" ~> repsep(ExpP, ",") <~ "]") ^^
