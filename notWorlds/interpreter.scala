@@ -83,12 +83,15 @@ case class Object(o:Map[String, Value] = Map()) extends Value {
   def +(tup:Tuple2[String, Value]): Object = Object(o + tup)
   override def toString = o.toString
 }
-case class World(o:Map[String, Value] = Map()) extends Value {
-  def apply(str:String): Value = {
-    o get str match {
-      case Some(v) => v
-      case None => UnitV()
+case class World(env:Map[Var, Address] = Map(), p:Value = UnitV()) extends Value {
+  def apply(x:Var): Address = {
+    env get x match {
+      case Some(a) => a
+      case None => throw undefined("free variable")
     }
+  }
+  def sprout(pw): World = {
+	World(env, w)
   }
 }
 sealed abstract class Closure extends Value {
@@ -316,12 +319,11 @@ def eval(config:Config): Value = {
 				case o @ Object(m) => lookProto(o, s.str)
 				case _ => throw undefined("illegal object field access")
 			}
-			case (w @ World(m), c:Call) => c.ef match {
+			case (w @ World(e, p), c:Call) => c.ef match {
 				case Var(x) => x match {
 					case "sprout" => {
 						// FILL ME IN
-						// sprout a mothafuckin in this bitch
-						println("foundsprout")
+						w.sprout()
 						UnitV()
 					}
 					case "commit" => {
@@ -376,7 +378,7 @@ def eval(config:Config): Value = {
 			val dummies = for ( VarBind(x,_) <- worldVbs ) yield (x, UnitV())
 			val newEnv = dummies.foldLeft( env )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
 			for ( VarBind(x, e) <- worldVbs ) gStore(newEnv(x)) = eval(Config(e, newEnv))
-			gStore(newEnv(Var("thisWorld"))) = World(Map[String, Value]()) //set thisWorld using current environment
+			gStore(newEnv(Var("thisWorld"))) = World(Map[Var, Address]()) //set thisWorld using current environment
 			eval(Config(t, newEnv))
 		}
 		case f:Fun => FunClo(env, f)
