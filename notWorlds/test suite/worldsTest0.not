@@ -1,7 +1,12 @@
 var
-    a = unit
+    a = unit,
+	b = unit,
+	c = 2
 in
 a := thisWorld;
-within a {
-    output "hello"
-}
+b := a.sprout();
+within b {
+	c := 4;
+	output c
+};
+output c
