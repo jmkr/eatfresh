@@ -34,7 +34,7 @@ package cs162.notWorlds.interpreter {
 // explained below this is because we take advantage of Scala's impure
 // nature in order to have a global, mutable store instead of
 // threading it through the computation
-case class Config(t:Term, env:Env)
+case class Config(t:Term, world:World)
 
 // environment: Var -> Address
 case class Env(env:Map[Var, Address] = Map()) {
@@ -90,9 +90,6 @@ case class World(env:Map[Var, Address] = Map(), p:Value = UnitV()) extends Value
       case None => throw undefined("free variable")
     }
   }
-  def sprout(pw): World = {
-	World(env, w)
-  }
 }
 sealed abstract class Closure extends Value {
   override def toString = "<closure>" 
@@ -138,7 +135,7 @@ object SemanticHelpers {
   import Interp._
 
   // lift program to initial configuration.
-  def inject(prog:Program): Config = { Config(prog.t, Env()) }
+  def inject(prog:Program): Config = { Config(prog.t, World(Env(), UnitV())) }
 
   // allocate value into store; unlike the helper function specified
   // in the semantics this one takes a single value and returns a
@@ -171,6 +168,12 @@ object SemanticHelpers {
       }
     }
   }
+
+  // Sprout a new world
+  def sproutWorld(pw:World): World = {
+	val newEnv = pw.env.foldLeft( Env() )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
+	World(newEnv, pw)
+  }
     
 }
 
@@ -200,7 +203,7 @@ object Interp {
 
 // the evaluation function [[.]] \in Config -> Value
 def eval(config:Config): Value = {
-	val env = config.env
+	val env = config.world.env
 
 	// since we'll be making lots of recursive calls where the
 	// environment doesn't change, we'll define an inner function that
@@ -319,13 +322,10 @@ def eval(config:Config): Value = {
 				case o @ Object(m) => lookProto(o, s.str)
 				case _ => throw undefined("illegal object field access")
 			}
+			case (w @ World(e, p), s:Str) => gStore(w.env(Var(s.str)))
 			case (w @ World(e, p), c:Call) => c.ef match {
 				case Var(x) => x match {
-					case "sprout" => {
-						// FILL ME IN
-						w.sprout()
-						UnitV()
-					}
+					case "sprout" => sproutWorld(w)
 					case "commit" => {
 						println("foundcommit")
 						UnitV()
@@ -340,7 +340,10 @@ def eval(config:Config): Value = {
 			}
 			case _ => throw undefined("illegal object field access")
 		}
-		case Within(w, t) => UnitV()
+		case Within(w, t) => evalTo(w) match {
+			case world @ World(e, p) => eval(Config(t, world))
+			case _ => throw undefined("illegal within on non-world")
+		}
 		case MCall(eO, eF, es) => (evalTo(eO), evalTo(eF)) match {
 			case (a:Address, s:StringV) => gStore(a) match {
 				case o @ Object(m) => lookProto(o, s.str) match {
@@ -351,7 +354,7 @@ def eval(config:Config): Value = {
 						val xv = (Var("self") :: xs) zip (a :: (es map evalTo))
 						val newEnv = xv.foldLeft( cloEnv )(
 							(env, xv) => env + (xv._1 -> alloc(xv._2)))
-							eval(Config(t, newEnv))
+							eval(Config(t, World(newEnv, config.world.p)))
 					}
 					case _ => {
 						throw undefined("calling a non-method")
@@ -369,7 +372,7 @@ def eval(config:Config): Value = {
 				val xv = (f :: xs) zip (clo :: (es map evalTo))
 				val newEnv = xv.foldLeft( cloEnv )(
 					(env, xv) => env + (xv._1 -> alloc(xv._2)))
-					eval(Config(t, newEnv))
+					eval(Config(t, World(newEnv, config.world.p)))
 			}
 			case _ => throw undefined("calling a non-closure")
 		}
@@ -377,9 +380,11 @@ def eval(config:Config): Value = {
 			val worldVbs = List(VarBind(Var("thisWorld"), NotUnit())) ::: vbs  //add thisworld first
 			val dummies = for ( VarBind(x,_) <- worldVbs ) yield (x, UnitV())
 			val newEnv = dummies.foldLeft( env )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
-			for ( VarBind(x, e) <- worldVbs ) gStore(newEnv(x)) = eval(Config(e, newEnv))
-			gStore(newEnv(Var("thisWorld"))) = World(Map[Var, Address]()) //set thisWorld using current environment
-			eval(Config(t, newEnv))
+			for ( VarBind(x, e) <- worldVbs ) gStore(newEnv(x)) = eval(Config(e, World(newEnv, config.world.p)))
+			
+			val newWorld = World(newEnv, UnitV());
+			gStore(newEnv(Var("thisWorld"))) = newWorld
+			eval(Config(t, newWorld))
 		}
 		case f:Fun => FunClo(env, f)
 		case m:Method => MethClo(env, m)
