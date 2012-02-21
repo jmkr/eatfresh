@@ -169,10 +169,49 @@ object SemanticHelpers {
     }
   }
 
+  // look up variable in the world chain of a record
+  def lookWorld(w:World, str:String): Value = {
+    w(Var(str)) match {
+      case Address(a) => gStore(Address(a))
+      case _ => {
+        w.p match {
+          case Address(a) => {
+            gStore(Address(a)) match {
+              case World(e, p) => lookWorld(World(e,p), str)
+              case Address(a2) => gStore(Address(a2)) match {
+                case World(e, p) => lookWorld(World(e,p), str)
+                case _ => throw undefined("no parent world")
+              }
+              case _ => throw undefined("no parent world")
+            }
+          }
+          case _ => throw undefined("no parent world")
+        }
+      }
+    }
+  }
+
   // Sprout a new world
   def sproutWorld(pw:World): World = {
-	val newEnv = pw.env.foldLeft( Env() )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
-	World(newEnv, pw)
+	  val newEnv = pw.env.foldLeft( Env() )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
+    //println(pw);
+	  World(newEnv, pw)
+  }
+
+  // Update child environment from parent
+  def updateWorld(cw:World): World = {
+    cw.p match {
+      case w @ World(e,p) => {
+        //println("parent = " + w)
+        val newEnv = w.env.foldLeft( Env() )( (env, xv) => env + (xv._1 -> alloc(xv._2)) )
+        //println("newEnv = " + newEnv)
+        World(newEnv, cw.p) 
+      }
+      case _ => {
+        //println("parent = unit")
+        cw
+      }
+    }
   }
     
 }
@@ -214,7 +253,12 @@ def eval(config:Config): Value = {
 			evalTo(t2)
 		}
 		case Assign(x, e) => {
+      //println(x)
 			gStore(env(x)) = evalTo(e)
+      //gStore(env(x)) match {
+      //  case w @ World(e,p) => { gStore(env(x)) = updateWorld(w) }
+      //  case _ => UnitV()
+      //}
 			UnitV()
 		}
 		case w @ While(e, t) => evalTo(e) match {
@@ -229,6 +273,7 @@ def eval(config:Config): Value = {
 			def val2str(v:Value): String = v match {
 				case a:Address => "[" + obj2str(a) + "]"
 				case StringV(s) if s == "" => "\"\""
+        case w @ World(e, p) => "[" + w + "]"
 				case other => other.toString
 			}
 			def obj2str(a:Address): String = gStore(a) match {
@@ -238,7 +283,10 @@ def eval(config:Config): Value = {
 						m.foldLeft("") ( (s, b) => b._2 match { case Address(a2) => s + ", " + b._1 + " : " + val2str(gStore(Address(a2))); case _ => s } )
 					}
 				}
-				case _ => throw undefined("error in Out")
+        case w @ World(e, p) => w.toString
+        case Address(a) => gStore(Address(a)).toString
+        case other => other.toString
+				//case _ => throw undefined("error in Out")
 			}
 			println(val2str(evalTo(e)))
 			UnitV()
@@ -322,13 +370,26 @@ def eval(config:Config): Value = {
 				case o @ Object(m) => lookProto(o, s.str)
 				case _ => throw undefined("illegal object field access")
 			}
-			case (w @ World(e, p), s:Str) => gStore(w.env(Var(s.str)))
+			case (w @ World(e, p), s:Str) =>  gStore(w.env(Var(s.str))) //lookWorld(w, s.str)
 			case (w @ World(e, p), c:Call) => c.ef match {
 				case Var(x) => x match {
-					case "sprout" => sproutWorld(w)
-					case "commit" => {
-						println("foundcommit")
-						UnitV()
+					case "sprout" => { 
+            sproutWorld(w)
+          }
+					case "commit" => c.es match {
+						//println("foundcommit")
+            //w.env.foldLeft( Env(Map[String, Value]()) )( (a, b) => a + (b.str) -> alloc(evalTo(b)) )
+            case Nil =>{
+              w.env.map( (a) => gStore(a._2) match { 
+                case Address(a2) => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(Address(a2))
+                case _ => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(a._2) 
+              })
+              UnitV()
+            }
+            case _ => {
+              println("non-empty commit")
+              UnitV()
+            }
 					}
 					case "update" => {
 						println("foundupdate")
