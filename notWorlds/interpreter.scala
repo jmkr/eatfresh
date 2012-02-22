@@ -192,23 +192,27 @@ object SemanticHelpers {
   }
 
   // Sprout a new world
+  /*  NO LONGER USED
   def sproutWorld(pw:World): World = {
-	  val newEnv = pw.env.foldLeft( Env() )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
+    val newEnv = pw.env.foldLeft( Env() )((env, xv) => env + (xv._1 -> alloc(gStore(xv._2.asInstanceOf[Address]))) )
     //println(pw);
-	  World(newEnv, pw)
+    World(newEnv, pw)
+  }
+  */
+
+  // Returns a new world with an empty environment and parent world
+  def newWorld(pw:World): World = {
+    World(Env(), pw)
   }
 
   // Update child environment from parent
   def updateWorld(cw:World): World = {
     cw.p match {
       case w @ World(e,p) => {
-        //println("parent = " + w)
-        val newEnv = w.env.foldLeft( Env() )( (env, xv) => env + (xv._1 -> alloc(xv._2)) )
-        //println("newEnv = " + newEnv)
+        val newEnv = w.env.foldLeft( Env() )( (env, xv) => env + (xv._1 -> alloc(gStore(xv._2.asInstanceOf[Address]))) )
         World(newEnv, cw.p) 
       }
       case _ => {
-        //println("parent = unit")
         cw
       }
     }
@@ -253,12 +257,12 @@ def eval(config:Config): Value = {
 			evalTo(t2)
 		}
 		case Assign(x, e) => {
-      //println(x)
 			gStore(env(x)) = evalTo(e)
-      //gStore(env(x)) match {
-      //  case w @ World(e,p) => { gStore(env(x)) = updateWorld(w) }
-      //  case _ => UnitV()
-      //}
+      // if the right side of the assign is a world, update it so the the world has current environment 
+      gStore(env(x)) match {
+        case w @ World(e,p) => { gStore(env(x)) = updateWorld(w) }
+        case _ => UnitV()
+      }
 			UnitV()
 		}
 		case w @ While(e, t) => evalTo(e) match {
@@ -374,7 +378,7 @@ def eval(config:Config): Value = {
 			case (w @ World(e, p), c:Call) => c.ef match {
 				case Var(x) => x match {
 					case "sprout" => { 
-            sproutWorld(w)
+            newWorld(w)
           }
 					case "commit" => c.es match {
 						//println("foundcommit")
