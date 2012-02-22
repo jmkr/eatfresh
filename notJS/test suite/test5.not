@@ -1,0 +1,4 @@
+var	
+	cat = {"sn":"Mew"}in
+cat."tail":="long";output cat."sn";
+output cat."tail"

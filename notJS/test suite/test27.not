@@ -1,0 +1,10 @@
+var	
+	cat = {"a":unit, 
+        "initialize": (self,x) => {self."a":=x },
+	"Call": (self, x) => {var tmp = x in self."a":=tmp+1 }
+	}
+in
+cat."Call"[10];
+output cat."a"
+
+

@@ -1,0 +1,9 @@
+var
+obj1 = {"1":3,
+"meth1": (self)=> {obj1.1:=1}
+
+}
+in output obj1."meth1"[]
+
+
+

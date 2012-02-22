@@ -1,0 +1,8 @@
+var	
+	cat = {"a":unit, "b":unit,
+	"assign": (self, x,y) => {cat."a":=x ; cat."b":=y}
+}
+in
+cat."assign"["Hello","Love"];
+output cat."a";
+output cat."b"

@@ -1,0 +1,51 @@
+<< read in a set of numbers and sort them in ascending order using
+   insertion sort. we create a list of the sorted values, then at the
+   end we print that list out >>
+
+var 
+sortedList = {
+  "head" : unit,
+  "tail" : unit,
+
+  "getTail" : (self) => 
+  {
+    if (self."tail" = unit) self."tail" := { "proto": sortedList };
+    self."tail"
+  },
+
+  "insert" : (self, x) => 
+  {
+    if (self."head" = unit) self."head" := x
+    else if (self."head" <= x) (self."getTail"[])."insert"[x]
+    else {
+      var tmp = self."head" in
+      self."head" := x;
+      self."tail" := { "head": tmp, "tail": self."tail", "proto": sortedList }
+    }
+  },
+
+  "print" : (self) => 
+  {
+    if (!(self."head" = unit)) {
+      output self."head";
+      if (!(self."tail" = unit)) (self."tail")."print"[]
+    }
+  }
+},
+
+get_num = f() => {
+  output "next number (0 to stop):";
+  input num
+},
+
+curr_num = unit,
+list = { "proto": sortedList }
+in
+
+curr_num := get_num();
+while (!(curr_num = 0)) {
+  list."insert"[curr_num];
+  curr_num := get_num()
+};
+
+list."print"[]

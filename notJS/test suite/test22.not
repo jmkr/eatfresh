@@ -1,0 +1,8 @@
+var	
+	cat = {"a":unit, 
+        "initialize": (self) => {self."a":=0 }
+	}
+in
+cat."initialize"[10]
+
+

@@ -1,0 +1,7 @@
+var	
+	cat = {"obj":unit,
+	"assign": (self, x) => {self."a":={"a":x, "c":"ZZZZ"}}
+}
+in
+cat."assign"["Hello"];
+output cat

@@ -1,0 +1,9 @@
+var	
+	cat = {"a":"zxcvbn", 
+        "initialize": (self) => { var dog={"b":"qwerty"} in output dog}
+	}
+in
+cat."initialize"[];
+output cat
+
+
