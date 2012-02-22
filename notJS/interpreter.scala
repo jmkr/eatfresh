@@ -1,4 +1,4 @@
-//kenneth hwang, john meeker
+// khwang jmeeker
 
 
 import java.io._
@@ -139,10 +139,10 @@ package cs162.notJS.interpreter {
 
     // look up a field in the prototype chain of a record
     def lookProto(o:Object, str:String): Value = {
-      o(str) match {
+      o(str) match {  // if str exists in o return o(str)
         case Address(a) => gStore(Address(a))
         case _ => {
-            o("proto") match {
+            o("proto") match { // else find "proto" and recurse through object
               case Address(a) => {
                   gStore(Address(a)) match {
                     case Object(m) => lookProto(Object(m), str)
@@ -185,6 +185,7 @@ package cs162.notJS.interpreter {
     // the global Store
     val gStore = Store()
 
+// the evaluation function [[.]] \in Config -> Value
     def eval(config:Config): Value = {
       val env = config.env
 
@@ -210,53 +211,29 @@ package cs162.notJS.interpreter {
           }
         case Out(e) => {
             def val2str(v:Value): String = v match {
-              case a:Address => "[" + o2str(a) + "]"
+              case a:Address => "[" + obj2str(a) + "]"
               case StringV(s) if s == "" => "\"\""
               case other => other.toString
             }
-//	def list2str(a:Address): String = gStore(a) match {
-//	  case Empty() => ""
-//	  case ListF(v, a) => val2str(v) + (list2str(a) match {
-//	    case "" => ""
-//	    case s  => ", " + s
-//	  })
-//	  case _ => throw undefined("outputting illegal value")
-//	}
-            def o2str(a:Address): String = gStore(a) match {
+            def obj2str(a:Address): String = gStore(a) match {
               case Object(m) => {
+                  val emp = ""
                   if (m.size==0) {
-                    ""
+                    emp
                   } else {
-                    m.foldLeft("") ( (s, b) => b._2 match { 
-                        case Address(a2) => s+", "+b._1+" : "+val2str(gStore(Address(a2))); 
-                        case _ => s
-                      } )                
+                    m.foldLeft(emp)(
+                      (b, c) => c._2 match {
+                        case Address(a2) => b+", "+c._1+" : "+val2str(gStore(Address(a2))); 
+                        case _ => b
+                      }
+                    )
                   }
                 }
+              case _ => throw undefined("error in Out")
             }
             println(val2str(evalTo(e)))
             UnitV()
           }
-//        case HAssign(e1, e2) => (evalTo(e1), evalTo(e2)) match {
-//            case (a:Address, v:Value) => gStore(a) match {
-//                case ListF(vH, aT) => {
-//                    gStore(a) = ListF(v, aT)
-//                    UnitV()
-//                  }
-//                case _ => throw undefined("assigning to head of empty list")
-//              }
-//            case _ => throw undefined("assigning to head of non-list")
-//          }
-//        case TAssign(e1, e2) => (evalTo(e1), evalTo(e2)) match {
-//            case (a1:Address, a2:Address) => (gStore(a1), gStore(a2)) match {
-//                case (ListF(vH, aT), _:ListV) => {
-//                    gStore(a1) = ListF(vH, a2)
-//                    UnitV()
-//                  }
-//                case _ => throw undefined("assigning to tail of empty list")
-//              }
-//            case _ => throw undefined("bad tail assignment")
-//          }
         case Num(n) => NumV(n)
         case Bool(b) => BoolV(b)
         case Str(str) => StringV(str)
@@ -297,13 +274,6 @@ package cs162.notJS.interpreter {
                     case Lte => BoolV(s1 <= s2)
                     case _   => throw undefined("illegal operation on strings")
                   }
-//                case (v:Value, a:Address) => bop match {
-//                    case Cons => gStore(a) match {
-//                        case _:ListV => alloc(ListF(v, a))
-//                        case _ => throw undefined("illegal value for cons")
-//                      }
-//                    case _ => throw undefined("illegal operation on lists")
-//                  }
                 case _ => throw undefined("illegal binary operation")
               }
           }
@@ -320,7 +290,7 @@ package cs162.notJS.interpreter {
             case clo @ FunClo(cloEnv, Fun(f, xs, t)) => {
                 if (xs.length != es.length) 
                   throw undefined("arguments and parameters don't match")
-	  
+
                 val xv = (f :: xs) zip (clo :: (es map evalTo))
                 val newEnv = xv.foldLeft( cloEnv )(
                   (env, xv) => env + (xv._1 -> alloc(xv._2)))
@@ -328,41 +298,19 @@ package cs162.notJS.interpreter {
               }
             case _ => throw undefined("calling a non-closure")
           }
-//        case NotList(es) => makeList(es map evalTo)
-//        case Head(e) => evalTo(e) match {
-//            case a:Address => gStore(a) match {
-//                case ListF(v, _) => v
-//                case _ => throw undefined("taking the head of an empty list")
-//              }
-//            case _ => throw undefined("taking the head of a non-list")
-//          }
-//        case Tail(e) => evalTo(e) match {
-//            case a:Address => gStore(a) match {
-//                case ListF(_, aT) => aT
-//                case _ => throw undefined("taking the tail of an empty list")
-//              }
-//            case _ => throw undefined("taking the tail of a non-list")
-//          }
         case Block(vbs, t) => {
             val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitV())
-            val newEnv = dummies.foldLeft( env )(
-              (env, xv) => env + (xv._1 -> alloc(xv._2)) )
-
+            val newEnv = dummies.foldLeft( env )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
             for ( VarBind(x, e) <- vbs ) gStore(newEnv(x)) = eval(Config(e, newEnv))
             eval(Config(t, newEnv))
           }
-        case f:Fun => FunClo(env, f)
-        case MCall(eO, eF, es) => (evalTo(eO), evalTo(eF)) match {
+        case MCall(o, f, es) => (evalTo(o), evalTo(f)) match {
             case (a:Address, s:StringV) => gStore(a) match {
-                case o @ Object(m) => lookProto(o, s.str) match {
+                case obj @ Object(m) => lookProto(obj, s.str) match {
                     case clo @ MethClo(cloEnv, Method(xs, t)) => {
                         if (xs.length != es.length) 
                           throw undefined("arguments and parameters don't match")
-                                 		
-                        val xv = (Var("self") :: xs) zip (a :: (es map evalTo))
-                        val newEnv = xv.foldLeft( cloEnv )(
-                          (env, xv) => env + (xv._1 -> alloc(xv._2)))
-                        eval(Config(t, newEnv))
+                        eval(Config(t,((Var("self") :: xs) zip (a :: (es map evalTo))).foldLeft(cloEnv)((c, d) => c+(d._1->alloc(d._2)))))
                       }
                     case _ => {
                         throw undefined("calling a non-method")
@@ -373,16 +321,16 @@ package cs162.notJS.interpreter {
             case _ => throw undefined("calling a non-method")
           }
         case Obj(fbs) => {
-            alloc( fbs.foldLeft(Object(Map[String, Value]()))( (a, b) => a + (b.s.str -> alloc(evalTo(b.e))) ) )
+            alloc(fbs.foldLeft(Object(Map[String, Value]()))((a, b) => a+(b.s.str -> alloc(evalTo(b.e)))))
           }
         case Access(e1, e2) => (evalTo(e1), evalTo(e2)) match {
             case (a:Address, s:StringV) => gStore(a) match { 
                 case obj @ Object(m) => lookProto(obj, s.str)
                 case _ => throw undefined("illegal object field access")
               }
-            case _ => throw undefined("illegal object field access") 		
+            case _ => throw undefined("illegal object field access")
           }
-	case Update(e1, e2, e3) => (evalTo(e1), evalTo(e2), evalTo(e3)) match {
+        case Update(e1, e2, e3) => (evalTo(e1), evalTo(e2), evalTo(e3)) match {
             case (a:Address, s:StringV, v:Value) => gStore(a) match { 
                 case obj @ Object(m) => {
                     obj(s.str) match {
@@ -391,7 +339,7 @@ package cs162.notJS.interpreter {
                           UnitV()
                         }
                       case _ => {
-                          gStore(a) = obj + (s.str -> alloc(v))
+                          gStore(a) = obj+(s.str -> alloc(v))
                           UnitV()
                         }
                     }
@@ -401,10 +349,12 @@ package cs162.notJS.interpreter {
             case _ => throw undefined("illegal object update")
               UnitV()
           }
+        case f:Fun => FunClo(env, f)
+        case m:Method => MethClo(env, m)
       }
+
       evalTo(config.t)
     }
   }
-
 
 } // end package cs162.notJS.interpreter
