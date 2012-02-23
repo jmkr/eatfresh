@@ -1,0 +1,11 @@
+var
+  x = 1
+in sprout(w1)
+
+	w1.sprout(w2);
+	output w1.x;
+	w2.x := 2;
+	output w1.x;
+	w2.commit;
+	output w1.x
+
