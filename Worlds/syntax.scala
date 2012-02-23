@@ -1,4 +1,4 @@
-package cs162.notC.syntax
+package cs162.worlds.syntax
 
 import java.io._
 import scala.io._

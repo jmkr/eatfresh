@@ -1,12 +1,12 @@
 import java.io._
 import scala.io._
-import cs162.notC.syntax._
+import cs162.worlds.syntax._
 import scala.collection.mutable.{Map => MMap}
 
 //---------- INTERPRETER ENTRY POINT ----------
 
-object notC {
-  import cs162.notC.interpreter._
+object worlds {
+  import cs162.worlds.interpreter._
   import SemanticHelpers._
   import Interp._
 
@@ -20,7 +20,7 @@ object notC {
   }
 }
 
-package cs162.notC.interpreter {
+package cs162.worlds.interpreter {
 
 //---------- SEMANTIC DOMAINS ----------
 
@@ -284,4 +284,4 @@ object Interp {
   }  
 }
 
-} // end package cs162.notC.interpreter
+} // end package cs162.worlds.interpreter
