@@ -1,0 +1,26 @@
+<< Euclid's GCD algorithm >>
+
+def mod(n, d) => 
+{ 
+  if ((n <= d) & (!(n = d))) n else mod((n - d), d)
+}
+
+def gcd(a, b) => 
+{
+  var r = unit in
+  while (!(b = 0)) {
+    r := mod(a, b);
+    a := b;
+    b := r
+  };
+  output "the GCD is: ";
+  output a
+}
+
+var
+  a = unit,
+  b = unit
+in 
+
+output "Computing GCD of 39 and 52.";
+gcd(39, 52)

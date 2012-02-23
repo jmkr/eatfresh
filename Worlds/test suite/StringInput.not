@@ -1,0 +1,13 @@
+def concatenateStrings(a,b,c) =>
+{
+  a + " " + b + "s" + " " + c
+}
+
+var
+  a = "ant",
+  b = "eat",
+  c = "choco" + "late"
+in
+
+output "concatenating 'ant', 'eat', and 'chocolate'.";
+output concatenateStrings(a,b,c)

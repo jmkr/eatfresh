@@ -1,0 +1,6 @@
+def a(a,b)=>
+{
+  output a + b
+}
+
+a(10)
