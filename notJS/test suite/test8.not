@@ -1,0 +1,5 @@
+var	
+	addField = f(x,fld,val) => {x.fld:=val},
+	cat = {}inaddField(cat, "field1",1);
+addField(cat, "field2",2);
+output cat

@@ -1,0 +1,31 @@
+<< Euclid's GCD algorithm >>
+
+var 
+mod = mod(n, d) => 
+{ 
+  if ((n <= d) & (!(n = d))) n else mod((n - d), d) 
+},
+
+gcd = f(a, b) => 
+{
+  var r = unit in
+  while (!(b = 0)) {
+    r := mod(a, b);
+    a := b;
+    b := r
+  };
+  output "the GCD is: ";
+  output a
+},
+
+a = unit,
+b = unit
+in 
+
+output "first number: ";
+a := input num;
+
+output "second number: ";
+b := input num;
+
+gcd(a, b)

@@ -1,0 +1,5 @@
+var
+  list=[3, true, "bob"]
+in
+list.head := false;
+output list

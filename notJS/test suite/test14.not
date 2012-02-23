@@ -1,0 +1,6 @@
+var	
+	cat = {"a":4,
+	"b": (self) => {cat."a" }
+},
+m=unitin
+m:=cat."b"; m()

@@ -1,0 +1,55 @@
+<< takes a set of symbols and their weights (a measure of frequency)
+   and performs Huffman Encoding to generate a prefix code for each
+   symbol.
+>>
+
+var 
+getSymbol = f(symw) => { symw.head },
+getWeight = f(symw) => { symw.tail.head },
+getLeft   = f(symw) => { symw.tail.tail.head },
+getRight  = f(symw) => { symw.tail.tail.tail.head },
+
+insert = insert(list, symw) => 
+{
+  if (list = []) list := [symw]
+  else if (getWeight(list.head) <= getWeight(symw)) 
+    list.tail := insert(list.tail, symw)
+  else list := symw :: list;
+  list
+},
+
+buildHuffmanTree = build(list) => 
+{
+  var tree = unit in if (list.tail = []) {
+    tree := list;
+    if (tree.head.tail.tail = []) tree.head.tail.tail := [ [], [] ]
+  }
+  else {
+    var symw = unit, e1 = list.head, e2 = list.tail.head in
+    symw := [ "", getWeight(e1) + getWeight(e2), e1, e2 ];
+    list := insert(list.tail.tail, symw);
+    tree := build(list)
+  };
+  tree
+},
+
+printPrefixes = printPrefixes(tree, code) => 
+{
+  if (!(tree = [])) {
+    if (!(getSymbol(tree) = "")) output getSymbol(tree) + " = " + code 
+    else {
+      printPrefixes(getLeft(tree), code + "0");
+      printPrefixes(getRight(tree), code + "1")
+    }
+  }
+},
+
+list = []
+in
+
+list := insert(list, ["a", 3]);
+list := insert(list, ["b", 1]);
+list := insert(list, ["c", 5]);
+list := insert(list, ["d", 2]);
+list := insert(list, ["e", 4]);
+printPrefixes(buildHuffmanTree(list).head, "")

@@ -1,0 +1,18 @@
+var pointP = 0, point1 = {}, point2 = {} in
+
+pointP := { 
+  "x" : 0, 
+  "y" : 0, 
+  "dist2" : (self, p) => {
+    var xd = self."x" - p."x",
+        yd = self."y" - p."y"
+    in (xd * xd) + (yd * yd)
+  }
+};
+
+point1."x" := 1;
+point1."y" := 1;
+point1."proto" := pointP;
+point2 := { "y" : 4, "proto" : pointP };
+
+output point1."dist2"[point2]

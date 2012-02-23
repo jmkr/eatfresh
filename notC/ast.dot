@@ -1,0 +1,41 @@
+digraph AST {
+1 [label="0"];
+2 [label="a ="];
+2 -> 1
+3 [label="0"];
+4 [label="b ="];
+4 -> 3
+5 [label="40"];
+6 [label="b ="];
+6 -> 5
+7 [label="2"];
+8 [label="c ="];
+8 -> 7
+9 [label="b"];
+10 [label="c"];
+11 [label="+"];
+11 -> 9
+11 -> 10
+12 [shape=box, label="block"];
+12 -> 6
+12 -> 8
+12 -> 11
+13 [label="a :="];
+13 -> 12
+14 [label="b"];
+15 [label="c"];
+16 [label="+"];
+16 -> 14
+16 -> 15
+17 [label="output"];
+17 -> 16
+18 [label=";"];
+18 -> 13
+18 -> 17
+19 [shape=box, label="block"];
+19 -> 2
+19 -> 4
+19 -> 18
+20 [shape=box, label="Program"];
+20 -> 19
+}

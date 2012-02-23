@@ -1,0 +1,16 @@
+var	
+	cat = {"a":unit, 
+        "initialize": (self) => {self."a":=0 },
+	"assign": (self, x) => { 
+	if(self."a"=unit) self."initialize"[]
+	else 
+		if(self."a"<=x) self."a":=x
+	}
+}
+in
+
+cat."assign"[10];
+output cat."a";
+cat."assign"[10];
+output cat."a"
+

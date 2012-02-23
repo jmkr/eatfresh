@@ -1,0 +1,4 @@
+var	
+	addField = f(x,val) => {x.val:=1},
+	cat = {}inaddField(cat, "field");
+output cat

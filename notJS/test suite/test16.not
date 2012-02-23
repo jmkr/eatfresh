@@ -1,0 +1,5 @@
+var	
+	cat = {"a":"Z-Z_Z"},
+obj = {"Hello": cat}
+in
+output obj

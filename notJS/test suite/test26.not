@@ -1,0 +1,8 @@
+var	
+	cat = {"a":unit, 
+        "initialize": (self,x) => {self."a":=x }
+	}
+in
+cat."K"[10]
+
+

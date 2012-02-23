@@ -1,0 +1,1 @@
+var  foo = f(a) => { a },  bar = g(b) => { output b } infoo(bar)(42)
