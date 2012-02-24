@@ -54,7 +54,6 @@ package cs162.worlds.interpreter {
     }
     def +(tup:Tuple2[Var, Address]): Env = Env(env + tup)
   }
-
 // store: Address -> Value
 //
 // we're taking advantage of Scala's impure nature to have a global,
@@ -153,7 +152,7 @@ package cs162.worlds.interpreter {
     
     def walloc(e:Env): Address = {
       val a = Address()
-      wStore(a) = e
+      wstore(a) = e
       a
     }
 
@@ -201,12 +200,14 @@ package cs162.worlds.interpreter {
 
   object Interp {
     import SemanticHelpers._
-
+    
+    // world environment: var -> world
+    var wenv = Env()
     // the global Store
     val gStore = Store()
     
     //worldstore
-    val wStore = World()
+    val wstore = World()
     
 // the evaluation function [[.]] \in Config -> Value
     def eval(config:Config): Value = {
@@ -351,15 +352,15 @@ package cs162.worlds.interpreter {
                 case obj @ Object(m) => lookProto(obj, s.str)
                 case _ => throw undefined("illegal object field access")
               }
-            case (wa:Address, x:Var) => {
-                val curEnv = wStore(wa)
+            case (w:Var, x:Var) => {
+                val curEnv = wstore(wenv(w))
                 gStore(curEnv(x))
             }
             case _ => throw undefined("illegal object field access")
           }
         case Update(e1, e2, e3) => (evalTo(e1), evalTo(e2), evalTo(e3)) match {
-            case (wa:Address, x:Var, v:Value) => {
-                val curEnv = wStore(wa)
+            case (w:Var, x:Var, v:Value) => {
+                val curEnv = wstore(wenv(w))
                 gStore(curEnv(x)) = v
                 UnitV()
             }
@@ -381,6 +382,17 @@ package cs162.worlds.interpreter {
             case _ => throw undefined("illegal object update")
               UnitV()
           }
+        case Sprout(w1, w2) => (evalTo(w1), evalTo(w2)) match {
+            case (w1:Var, w2:Var) => {
+                wenv = wenv + (w2 -> walloc(Env()) )
+                UnitV()
+            }
+            case _ => throw undefined("afdsfa")
+         
+        } 
+        case Commit(w1) => {
+            throw undefined("commit not supported yet")
+        }
         case f:Fun => FunClo(env, f)
         case m:Method => MethClo(env, m)
       }
