@@ -22,6 +22,7 @@ case class While(e:Exp, t:Term) extends Cmd
 case class Out(e:Exp) extends Cmd
 case class Sprout(w1:Var, w2:Var) extends Cmd
 case class Commit(w:Var) extends Cmd
+case class Update(v1:Var, v2:Var, e1:Exp) extends Cmd
 
 // expressions
 sealed abstract class Exp extends Term
@@ -36,6 +37,7 @@ case class If(e:Exp, t1:Term, t2:Term) extends Exp
 case class In(typ:InputType) extends Exp
 case class Call(f:Var, es:List[Exp]) extends Exp
 case class Block(vds:List[VarBind], t:Term) extends Exp
+case class Access(v1:Var, v2:Var) extends Exp
 
 // bindings for Block
 case class VarBind(x:Var, e:Exp) extends AST
@@ -152,6 +154,25 @@ object PrettyPrint {
 	case Commit(w) => {
 	val myLbl = getid
 	//printNode(myLbl, w2)
+	myLbl
+      }
+	case Access(v1, v2) => {
+	val recLbl = output(v1)
+	val fldLbl = output(v2)
+	val myLbl = getid
+
+	printNode(myLbl, "_._")
+	printEdges(myLbl, List(recLbl, fldLbl))
+	myLbl
+      }
+	case Update(v1, v2, e1) => {
+	val objLbl = output(v1)
+	val fldLbl = output(v2)
+	val rhsLbl = output(e1)
+	val myLbl = getid
+
+	printNode(myLbl, "_._ :=")
+	printEdges(myLbl, List(objLbl, fldLbl, rhsLbl))
 	myLbl
       }
       case Not(e) => {
