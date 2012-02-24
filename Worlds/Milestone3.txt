@@ -1,0 +1,17 @@
+CS162 - Worlds Project - Milestone 3
+Ken Hwang : khwang
+John Meeker : jmeeker
+Febraury 23rd, 2012
+
+For Milestone 3, we experienced what turned out to be a much more difficult problem then we first
+anticipated. From our original plan in Milestone 2, we thought it would make the most sense to base our
+"Worlds" project off of the notC syntax. After a tedious amount of time spent trying to get the Sprout
+and Commit commands to work, we realized that we were taking a slightly incorrect approach to solving the
+problem. The TA informed us that we would have a much more rewarding experience if we started with notJS
+as our base syntax. So after weighing out the pros and cons, we decided to abandon our work on the
+interpeter and syntax which was based off of notC, and start fresh with notJS. We hope that this change
+will be a huge benefit as we come across more complicated aspects of completing this project. That being
+said, the current state of our project at Milestone 3 is that we have completed the syntax for the Sprout
+and Commit commands. Our intepreter is currently in the stage of implementings Sprout, and we hope to
+complete this very soon since switching to notJS as our syntax base. From there, we plan on completing
+the Commit command in time for Milestone 4.
