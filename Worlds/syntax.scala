@@ -9,10 +9,7 @@ sealed abstract class AST
 sealed abstract class Term extends AST
 
 // programs
-case class Program(fds:List[FunctionDef], t:Term) extends AST
-
-// function definitions
-case class FunctionDef(f:Var, xs:List[Var], t:Term) extends AST
+case class Program(t:Term) extends AST
 
 // commands
 sealed abstract class Cmd extends Term
@@ -22,7 +19,7 @@ case class While(e:Exp, t:Term) extends Cmd
 case class Out(e:Exp) extends Cmd
 case class Sprout(w1:Var, w2:Var) extends Cmd
 case class Commit(w:Var) extends Cmd
-case class Update(v1:Var, v2:Var, e1:Exp) extends Cmd
+case class Update(e1:Exp, e2:Exp, e3:Exp) extends Cmd
 
 // expressions
 sealed abstract class Exp extends Term
@@ -35,12 +32,17 @@ case class Not(e:Exp) extends Exp
 case class BinOp(op:Bop, e1:Exp, e2:Exp) extends Exp
 case class If(e:Exp, t1:Term, t2:Term) extends Exp
 case class In(typ:InputType) extends Exp
-case class Call(f:Var, es:List[Exp]) extends Exp
+case class Call(ef:Exp, es:List[Exp]) extends Exp
 case class Block(vds:List[VarBind], t:Term) extends Exp
-case class Access(v1:Var, v2:Var) extends Exp
+case class Fun(f:Var, xs:List[Var], t:Term) extends Exp
+case class Obj(fbs:List[FldBind]) extends Exp
+case class Access(e1:Exp, e2:Exp) extends Exp
+case class Method(xs:List[Var], t:Term) extends Exp
+case class MCall(eO:Exp, eF:Exp, es:List[Exp]) extends Exp
 
-// bindings for Block
+// bindings for Block and Obj respectively
 case class VarBind(x:Var, e:Exp) extends AST
+case class FldBind(s:Str, e:Exp) extends AST
 
 // types for input
 sealed abstract class InputType
@@ -79,12 +81,12 @@ object PrettyPrint {
     }
 
     def output(node: AST): Int = node match {
-      case Program(fds, t) => {
-	val lbls = (fds map output) ::: List(output(t))
+      case Program(t) => {
+	val childLbl = output(t)
 	val myLbl = getid
 	
 	printNode(myLbl, "Program", true)
-	printEdges(myLbl, lbls)
+	printEdges(myLbl, List(childLbl))
 	myLbl
       }
       case Seq(t1, t2) => {
@@ -121,6 +123,16 @@ object PrettyPrint {
 	printEdges(myLbl, List(eLbl))
 	myLbl
       }
+      case Update(e1, e2, e3) => {
+	val objLbl = output(e1)
+	val fldLbl = output(e2)
+	val rhsLbl = output(e3)
+	val myLbl = getid
+	
+	printNode(myLbl, "_._ :=")
+	printEdges(myLbl, List(objLbl, fldLbl, rhsLbl))
+	myLbl
+      }
       case Num(n) => {
 	val myLbl = getid
 	printNode(myLbl, n.toString)
@@ -144,35 +156,6 @@ object PrettyPrint {
       case Var(x) => {
 	val myLbl = getid
 	printNode(myLbl, x)
-	myLbl
-      }
-	case Sprout(w1, w2) => {
-	val myLbl = getid
-	//printNode(myLbl, w2)
-	myLbl
-      }
-	case Commit(w) => {
-	val myLbl = getid
-	//printNode(myLbl, w2)
-	myLbl
-      }
-	case Access(v1, v2) => {
-	val recLbl = output(v1)
-	val fldLbl = output(v2)
-	val myLbl = getid
-
-	printNode(myLbl, "_._")
-	printEdges(myLbl, List(recLbl, fldLbl))
-	myLbl
-      }
-	case Update(v1, v2, e1) => {
-	val objLbl = output(v1)
-	val fldLbl = output(v2)
-	val rhsLbl = output(e1)
-	val myLbl = getid
-
-	printNode(myLbl, "_._ :=")
-	printEdges(myLbl, List(objLbl, fldLbl, rhsLbl))
 	myLbl
       }
       case Not(e) => {
@@ -222,12 +205,13 @@ object PrettyPrint {
 	printNode(myLbl, "input " + ts)
 	myLbl
       }
-      case Call(f, es) => {
+      case Call(ef, es) => {
+	val funLbl = output(ef)
 	val lbls = es map output
 	val myLbl = getid
 	
-	printNode(myLbl, f + "(...)")
-	printEdges(myLbl, lbls)
+	printNode(myLbl, "_(...)")
+	printEdges(myLbl, funLbl :: lbls)
 	myLbl
       }
       case Block(vds, t) => {
@@ -238,12 +222,57 @@ object PrettyPrint {
 	printEdges(myLbl, lbls)
 	myLbl
       }
-      case FunctionDef(Var(f), _, t) => {
+      case Fun(Var(f), _, t) => {
 	val bodyLbl = output(t)
 	val myLbl = getid
 
-	printNode(myLbl, "def " + f, true)
+	printNode(myLbl, "fun: " + f, true)
 	printEdges(myLbl, List(bodyLbl))
+	myLbl
+      }
+      case Obj(fbs) => {
+	val lbls = fbs map output
+	val myLbl = getid
+	
+	printNode(myLbl, "{...}")
+	printEdges(myLbl, lbls)
+	myLbl
+      }
+	case Sprout(w1, w2) => {
+	val myLbl = getid
+	//printNode(myLbl, w2)
+	myLbl
+      }
+	case Commit(w) => {
+	val myLbl = getid
+	//printNode(myLbl, w2)
+	myLbl
+      }
+      case Access(e1, e2) => {
+	val recLbl = output(e1)
+	val fldLbl = output(e2)
+	val myLbl = getid
+	
+	printNode(myLbl, "_._")
+	printEdges(myLbl, List(recLbl, fldLbl))
+	myLbl
+      }
+      case Method(_, t) => {
+	val bodyLbl = output(t)
+	val myLbl = getid
+
+	printNode(myLbl, "method", true)
+	printEdges(myLbl, List(bodyLbl))
+	myLbl	
+      }
+      case MCall(eO, eF, es) => {
+	val objLbl = output(eO)
+	val fldLbl = output(eF)
+	val lbls = es map output
+	val myLbl = getid
+
+	printNode(myLbl, "_._[...]")
+	printEdges(myLbl, objLbl :: fldLbl :: lbls)
 	myLbl
       }
       case VarBind(Var(x), e2) => {
@@ -251,6 +280,14 @@ object PrettyPrint {
 	val myLbl = getid
 	
 	printNode(myLbl, x + " =")
+	printEdges(myLbl, List(rhsLbl))
+	myLbl
+      }
+      case FldBind(Str(str), e2) => {
+	val rhsLbl = output(e2)
+	val myLbl = getid
+	
+	printNode(myLbl, "\\\"" + str + "\\\" :")
 	printEdges(myLbl, List(rhsLbl))
 	myLbl
       }
@@ -274,11 +311,11 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   // reserved keywords
   lexical.reserved += ( "var", "if", "else", "while", "true",
 		       "false", "input", "output", "unit",
-		       "num", "str", "in", "def", "sprout", "commit")
+		       "num", "str", "in", "self" )
 
   lexical.delimiters += ( "+", "-", "*", "/", "!", "&", "|", "=",
 			 "<=", "{", "}", "(", ")", ":=", ";", ",",
-			 "<<", ">>", "=>" )
+			 ":", "<<", ">>", ".", "=>", "[", "]" )
   
   // for debugging the parser: modify each rule you want to trace by
   // changing '= <pattern>' to '= "name" !!! <pattern>'
@@ -286,7 +323,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   // turn off the debugging either by removing the modifications or
   // changing the !!! method to return p instead of log(p)(name)
   implicit def toLogged(name:String) = new { 
-    def !!![T](p:P[T]) = p //log(p)(name)
+    def !!![T](p:P[T]) = p//log(p)(name)
   }
 
   // take the program as a string and return the corresponding AST
@@ -313,8 +350,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   }
   
   // programs
-  lazy val ProgramP: P[Program] = (FunctionDefP*) ~ TermP ^^
-  { case fds ~ t => Program(fds, t) }
+  lazy val ProgramP: P[Program] = TermP ^^ (Program)
 
   // terms (seqP promoted here for precedence issues)
   lazy val TermP: P[Term] = seqP
@@ -323,15 +359,20 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   (_.reduceLeft(Seq(_,_)))
 
   // commands
-  lazy val CmdP: P[Cmd] = ( assignP | whileP | outputP | sproutP | commitP)
+  lazy val CmdP: P[Cmd] = ( assignP | whileP | outputP | updateP )
 
   // expressions (factored to E for precedence issues)
   lazy val ExpP: P[Exp] = ( binopP | E )
 
   // expressions
   lazy val E: P[Exp] = (
-      callP
-    | blockP                        
+      mcallP
+    | callP
+    | accessP
+    | funP
+    | objP
+    | blockP
+    | methodP
     | ifP                           
     | notP
     | inputP
@@ -340,7 +381,6 @@ object ParseL extends StandardTokenParsers with PackratParsers {
     | strP
     | unitP
     | varP
-    | accessP
     | "(" ~> ExpP <~ ")"
   )
 
@@ -355,6 +395,26 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   // output
   lazy val outputP: P[Out] = "output" !!! "output" ~> ExpP ^^ (Out)
 
+  // Sprout
+  lazy val sproutP: P[Sprout] = "sprout" !!! opt(varP) ~ ("." ~ "sprout" ~ "(" ~> varP <~ ")") ^^
+  { case w1 ~ w2 => w1 match {
+	    case Some(v) => Sprout(v, w2)
+	    case None    => Sprout(Var("root"), w2) 
+	  }
+  }
+
+  // commit
+  lazy val commitP: P[Commit] = "commit" !!! varP <~ ("." ~ "commit") ^^
+  { case w => Commit(w) }
+
+  // object field access
+  lazy val accessP: P[Access] = "access" !!! varP ~ ("." ~> varP) <~ not(":=") ^^
+  { case rec ~ fld => Access(rec, fld) }
+
+  // field update
+  lazy val updateP: P[Update] = "update" !!! varP ~ ("." ~> varP) ~ (":=" ~> ExpP) ^^
+  { case rec ~ fld ~ rhs => Update(rec, fld, rhs) }
+
   // integer
   lazy val numP: P[Num] = "num" !!! (
       numericLit ^^ ((n:String) => Num(BigInt(n)))
@@ -368,7 +428,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   )
 
   // string
-  lazy val strP: P[Str] = "string" !!! stringLit ^^ (Str(_))
+  lazy val strP: P[Str] = "string" !!! stringLit ^^ (Str)
 
   // unit
   lazy val unitP: P[NotUnit] = "unit" !!! ("unit" ^^^ NotUnit())
@@ -415,28 +475,8 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   )
 
   // function call
-  lazy val callP: P[Call] = "call" !!! varP ~ ("(" ~> repsep(ExpP, ",") <~ ")") ^^
+  lazy val callP: P[Call] = "call" !!! E ~ ("(" ~> repsep(ExpP, ",") <~ ")") ^^
   { case fun ~ args => Call(fun, args) }
-
-  // Sprout
-  lazy val sproutP: P[Sprout] = "sprout" !!! opt(varP) ~ ("." ~ "sprout" ~ "(" ~> varP <~ ")") ^^
-  { case w1 ~ w2 => w1 match {
-	    case Some(v) => Sprout(v, w2)
-	    case None    => Sprout(Var("root"), w2) 
-	  }
-  }
-
-  // commit
-  lazy val commitP: P[Commit] = "commit" !!! varP <~ ("." ~ "commit") ^^
-  { case w => Commit(w) }
-
-  // object field access
-  lazy val accessP: P[Access] = "access" !!! varP ~ ("." ~> varP) <~ not(":=") ^^
-  { case rec ~ fld => Access(rec, fld) }
-
-  // field update
-  lazy val updateP: P[Update] = "update" !!! varP ~ ("." ~> varP) ~ (":=" ~> ExpP) ^^
-  { case rec ~ fld ~ rhs => Update(rec, fld, rhs) }
 
   // block
   lazy val blockP: P[Block] = "var" !!! "var" ~> rep1sep(vbindP, ",") ~ ("in" ~> (("{" ~> TermP <~ "}") | TermP)) ^^
@@ -447,6 +487,25 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   { case x ~ e => VarBind(x, e) }
 
   // function def
-  lazy val FunctionDefP: P[FunctionDef] = "def" !!! "def" ~> varP ~ ("(" ~> repsep(varP, ",") <~ ")" ~ "=>" ~ "{") ~ TermP <~ "}" ^^
-  { case f ~ prms ~ body => FunctionDef(f, prms, body) }
+  lazy val funP: P[Fun] = "fun" !!! varP ~ ("(" ~> repsep(varP, ",") <~ ")" ~ "=>" ~ "{") ~ TermP <~ "}" ^^
+  { case f ~ prms ~ body => Fun(f, prms, body) }
+
+  // object
+  lazy val objP: P[Obj] = "object" !!! "{" ~> repsep(fbindP, ",") <~ "}" ^^ (Obj)
+  
+  // field binding
+  lazy val fbindP: P[FldBind] = "fbind" !!! strP ~ (":" ~> ExpP) ^^
+  { case lhs ~ rhs => FldBind(lhs, rhs) }
+  
+  // method def
+  lazy val methodP: P[Method] = "method" !!! "(" ~ selfP ~ opt(",") ~> (repsep(varP, ",") <~ ")" ~ "=>" ~ "{") ~ TermP <~ "}" ^^
+  { case prms ~ body => Method(prms, body) }
+
+  // self
+  lazy val selfP: P[Var] = "self" ^^^ (Var("self"))
+
+  // method calls
+  lazy val mcallP: P[MCall] = "mcall" !!! ((selfP | E) <~ ".") ~ ExpP ~ ("[" ~> repsep(ExpP, ",") <~ "]") ^^
+  { case rec ~ fld ~ args => MCall(rec, fld, args) }
+
 }
