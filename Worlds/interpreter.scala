@@ -33,6 +33,16 @@ package cs162.worlds.interpreter {
 // nature in order to have a global, mutable store instead of
 // threading it through the computation
   case class Config(t:Term, env:Env)
+  
+// world: Address -> Env
+  case class World(world:MMap[Address, Env] = World()) {
+    def apply(a:Address): Env = {
+      world get a match {
+        case Some(v) => v
+        case None => throw undefined("non-existent address")
+      }
+    }
+  }
 
 // environment: Var -> Address
   case class Env(env:Map[Var, Address] = Map()) {
@@ -101,6 +111,10 @@ package cs162.worlds.interpreter {
     implicit def store2map(s:Store): MMap[Address, Value] = s.store
     implicit def map2store(m:MMap[Address, Value]): Store = Store(m)
   }
+  object World { 
+    implicit def world2map(w:World): MMap[Address, Env] = w.world
+    implicit def map2world(m:MMap[Address, Env]): World = World(m)
+  }
   object Address { 
     var id = 0
     def apply(): Address = { id += 1; Address(id) }
@@ -134,6 +148,12 @@ package cs162.worlds.interpreter {
     def alloc(v:Value): Address = {
       val a = Address()
       gStore(a) = v
+      a
+    }
+    
+    def walloc(e:Env): Address = {
+      val a = Address()
+      wStore(a) = e
       a
     }
 
@@ -184,7 +204,10 @@ package cs162.worlds.interpreter {
 
     // the global Store
     val gStore = Store()
-
+    
+    //worldstore
+    val wStore = World()
+    
 // the evaluation function [[.]] \in Config -> Value
     def eval(config:Config): Value = {
       val env = config.env
@@ -197,8 +220,8 @@ package cs162.worlds.interpreter {
             evalTo(t1)
             evalTo(t2)
           }
-        case Assign(x, e) => {
-            gStore(env(x)) = evalTo(e)
+        case Assign(x, e) => { //should fail
+            //gStore(env(x)) = evalTo(e)
             UnitV()
           }
         case w @ While(e, t) => evalTo(e) match {
@@ -328,9 +351,18 @@ package cs162.worlds.interpreter {
                 case obj @ Object(m) => lookProto(obj, s.str)
                 case _ => throw undefined("illegal object field access")
               }
+            case (wa:Address, x:Var) => {
+                val curEnv = wStore(wa)
+                gStore(curEnv(x))
+            }
             case _ => throw undefined("illegal object field access")
           }
         case Update(e1, e2, e3) => (evalTo(e1), evalTo(e2), evalTo(e3)) match {
+            case (wa:Address, x:Var, v:Value) => {
+                val curEnv = wStore(wa)
+                gStore(curEnv(x)) = v
+                UnitV()
+            }
             case (a:Address, s:StringV, v:Value) => gStore(a) match { 
                 case obj @ Object(m) => {
                     obj(s.str) match {
