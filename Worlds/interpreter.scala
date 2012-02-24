@@ -381,6 +381,14 @@ package cs162.worlds.interpreter {
             case _ => throw undefined("illegal object update")
               UnitV()
           }
+		case Sprout(w1, w2) => (evalTo(w1), evalTo(w2)) match {
+			case (n:None, w2:Var) => {
+				wStore(Env())
+			}
+			case (w1:Var, w2:Var) => {
+
+			}
+		}
         case f:Fun => FunClo(env, f)
         case m:Method => MethClo(env, m)
       }
