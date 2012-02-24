@@ -20,6 +20,8 @@ case class Seq(t1:Term, t2:Term) extends Cmd
 case class Assign(x:Var, e:Exp) extends Cmd
 case class While(e:Exp, t:Term) extends Cmd
 case class Out(e:Exp) extends Cmd
+case class Sprout(w1:Var, w2:Var) extends Cmd
+case class Commit(w:Var) extends Cmd
 
 // expressions
 sealed abstract class Exp extends Term
@@ -142,6 +144,16 @@ object PrettyPrint {
 	printNode(myLbl, x)
 	myLbl
       }
+	case Sprout(w1, w2) => {
+	val myLbl = getid
+	//printNode(myLbl, w2)
+	myLbl
+      }
+	case Commit(w) => {
+	val myLbl = getid
+	//printNode(myLbl, w2)
+	myLbl
+      }
       case Not(e) => {
 	val eLbl = output(e)
 	val myLbl = getid
@@ -241,7 +253,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   // reserved keywords
   lexical.reserved += ( "var", "if", "else", "while", "true",
 		       "false", "input", "output", "unit",
-		       "num", "str", "in", "def")
+		       "num", "str", "in", "def", "sprout", "commit")
 
   lexical.delimiters += ( "+", "-", "*", "/", "!", "&", "|", "=",
 			 "<=", "{", "}", "(", ")", ":=", ";", ",",
@@ -290,7 +302,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   (_.reduceLeft(Seq(_,_)))
 
   // commands
-  lazy val CmdP: P[Cmd] = ( assignP | whileP | outputP )
+  lazy val CmdP: P[Cmd] = ( assignP | whileP | outputP | sproutP | commitP)
 
   // expressions (factored to E for precedence issues)
   lazy val ExpP: P[Exp] = ( binopP | E )
@@ -307,6 +319,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
     | strP
     | unitP
     | varP
+    | accessP
     | "(" ~> ExpP <~ ")"
   )
 
@@ -383,6 +396,26 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   // function call
   lazy val callP: P[Call] = "call" !!! varP ~ ("(" ~> repsep(ExpP, ",") <~ ")") ^^
   { case fun ~ args => Call(fun, args) }
+
+  // Sprout
+  lazy val sproutP: P[Sprout] = "sprout" !!! opt(varP) ~ ("." ~ "sprout" ~ "(" ~> varP <~ ")") ^^
+  { case w1 ~ w2 => w1 match {
+	    case Some(v) => Sprout(v, w2)
+	    case None    => Sprout(Var("root"), w2) 
+	  }
+  }
+
+  // commit
+  lazy val commitP: P[Commit] = "commit" !!! varP <~ ("." ~ "commit") ^^
+  { case w => Commit(w) }
+
+  // object field access
+  lazy val accessP: P[Access] = "access" !!! varP ~ ("." ~> varP) <~ not(":=") ^^
+  { case rec ~ fld => Access(rec, fld) }
+
+  // field update
+  lazy val updateP: P[Update] = "update" !!! varP ~ ("." ~> varP) ~ (":=" ~> ExpP) ^^
+  { case rec ~ fld ~ rhs => Update(rec, fld, rhs) }
 
   // block
   lazy val blockP: P[Block] = "var" !!! "var" ~> rep1sep(vbindP, ",") ~ ("in" ~> (("{" ~> TermP <~ "}") | TermP)) ^^
