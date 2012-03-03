@@ -85,16 +85,27 @@ object Infer {
     def evalTo(t:Term): Type = t match {
       // FILL ME IN
       case Seq(t1, t2) => {
-        UnitT()
+        evalTo(t1)
+        return evalTo(t2)
       }
       case Assign(x, e) => {
-        UnitT()
+        if(evalTo(e) == env(x)) UnitT()
+        else throw illTyped("Assignment type miss-match!!!!!!")
       }
       case w @ While(e, t) => evalTo(e) match {
-        case _ => UnitT()
+        case BoolT() => {
+          evalTo(t)
+          UnitT()
+        }
+        case _ => throw illTyped("While expression mishap!")
       }
       case Out(e) => evalTo(e) match {
-        case _ => UnitT()
+        case BoolT() => UnitT()
+        case NumT() => UnitT()
+        case StrT() => UnitT()
+        case FunT(ts, t) => UnitT()
+        case ListT(t) => UnitT()
+        case _ => throw illTyped("Output expression mishap!")
       }
       case HAssign(e1, e2) => e1 match {
         case _ => UnitT()
@@ -102,16 +113,41 @@ object Infer {
       case TAssign(e1, e2) => e1 match {
         case _ => UnitT()
       }
-      case Num(n) => UnitT()
-      case Bool(b) => UnitT()
-      case Str(str) => UnitT()
+      case Num(n) => NumT()
+      case Bool(b) => BoolT()
+      case Str(str) => StrT()
       case NotUnit() => UnitT()
-      case x:Var => UnitT()
+      case x:Var => env(x)
       case Not(e) => evalTo(e) match {
-        case _ => UnitT()
+        case _ => BoolT()
       }
       case BinOp(bop, e1, e2) => bop match {
-        case _ => UnitT()
+        case Equal => BoolT()
+        case _ => (evalTo(e1), evalTo(e2)) match {
+          case (BoolT(), BoolT()) => bop match {
+            case And => BoolT()
+            case Or  => BoolT()
+            case _   => throw illTyped("illegal operation on bools")
+          }
+          case (NumT(), NumT()) => bop match {
+            case Add => NumT()
+            case Sub => NumT()
+            case Mul => NumT()
+            case Div => NumT()
+            case Lte => BoolT()
+            case _   => throw illTyped("illegal operation on nums")
+          }
+          case (StrT(), StrT()) => bop match {
+            case Add => StrT()
+            case Lte => BoolT()
+            case _   => throw illTyped("illegal operation on strings")
+          }
+          case (_, ListT(typ)) => bop match {
+            case Cons => ListT(typ)
+            case _ => throw illTyped("illegal operation on lists")
+          }
+          case _ => throw illTyped("illegal binary operation")
+        }
       }
       case If(e, t1, t2) => evalTo(e) match {
         case _ => UnitT()
