@@ -60,14 +60,14 @@ object SemanticHelpers {
   // type variable T with something else, T always sets its parent to
   // that other type
   //
-  def union(type1:Type, type2:Type): Unit = // FILL ME IN
+  def union(type1:Type, type2:Type): Unit = UnitT()// FILL ME IN
 
   // return a type's set representative; this function should use path
   // compression to optimize performance
-  def find(typ:Type): Type = // FILL ME IN
+  def find(typ:Type): Type = UnitT()// FILL ME IN
 
   // return all the type variables in a type
-  def varsIn(typ:Type): Set[TVar] = // FILL ME IN
+  def varsIn(typ:Type): Set[TVar] = Set(TVar())// FILL ME IN
 
 }
 
@@ -84,6 +84,59 @@ object Infer {
     // will leave env as a free variable
     def evalTo(t:Term): Type = t match {
       // FILL ME IN
+      case Seq(t1, t2) => {
+        UnitT()
+      }
+      case Assign(x, e) => {
+        UnitT()
+      }
+      case w @ While(e, t) => evalTo(e) match {
+        case _ => UnitT()
+      }
+      case Out(e) => evalTo(e) match {
+        case _ => UnitT()
+      }
+      case HAssign(e1, e2) => e1 match {
+        case _ => UnitT()
+      }
+      case TAssign(e1, e2) => e1 match {
+        case _ => UnitT()
+      }
+      case Num(n) => UnitT()
+      case Bool(b) => UnitT()
+      case Str(str) => UnitT()
+      case NotUnit() => UnitT()
+      case x:Var => UnitT()
+      case Not(e) => evalTo(e) match {
+        case _ => UnitT()
+      }
+      case BinOp(bop, e1, e2) => bop match {
+        case _ => UnitT()
+      }
+      case If(e, t1, t2) => evalTo(e) match {
+        case _ => UnitT()
+      }
+      case In(typ) => typ match {
+        case _ => UnitT()
+      }
+      case Call(ef, es) => {
+        UnitT()
+      }
+      case NotList(es) => {
+        UnitT()
+      }
+      case Head(e) => evalTo(e) match {
+        case _ => UnitT()
+      }
+      case Tail(e) => evalTo(e) match {
+        case _ => UnitT()
+      }
+      case Block(vbs, t) => {
+        UnitT()
+      }
+      case Fun(f, xs, t) => {
+        UnitT()
+      }
     }
 
     evalTo(config.t)
