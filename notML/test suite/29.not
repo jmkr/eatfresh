@@ -1,0 +1,13 @@
+var
+
+a=true,
+b=1
+
+in 
+while(b+1) {
+	b:=b+1; 
+	if(b=10) {
+	a:=false
+	}
+ }
+

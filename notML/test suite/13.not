@@ -1,0 +1,6 @@
+var
+	bl = "cat"
+in 
+output bl;
+bl:=20;
+output bl

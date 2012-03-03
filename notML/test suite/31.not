@@ -1,0 +1,7 @@
+var
+a=true,
+b="str"
+in 
+input str
+
+

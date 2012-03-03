@@ -1,0 +1,4 @@
+var
+	bl = "eeqeq"
+in
+output bl&bl

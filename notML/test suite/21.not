@@ -1,0 +1,7 @@
+var
+  double=f(x)=>{x-x+1},
+  list=[1,2,double(10)]
+in
+output list
+
+

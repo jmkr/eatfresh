@@ -1,0 +1,9 @@
+var
+
+a=true,
+ifs = f(a)=> { if(!a) { a } else "str"}
+
+in 
+ifs(false)
+
+

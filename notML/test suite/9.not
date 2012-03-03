@@ -1,0 +1,4 @@
+var
+	bl = 10
+in
+output bl1&bl1

@@ -1,0 +1,6 @@
+var
+  double=f(x)=>{x-x+1},
+  list=[double(10),0,0]
+in list.head
+
+

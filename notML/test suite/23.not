@@ -1,0 +1,6 @@
+var
+  double=f(x)=>{x+x},
+  list=[double("str")]
+in list.head
+
+

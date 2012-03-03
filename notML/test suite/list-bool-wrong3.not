@@ -1,0 +1,5 @@
+var
+d1 = f(x)=> {if(x) false else true}
+in d1(d1(d1([]))) 
+
+
