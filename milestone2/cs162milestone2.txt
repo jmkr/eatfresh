@@ -57,7 +57,7 @@ You could include some made-up programs in that final language as an example of 
         a = thisWorld;
         b = a.sprout();
 
-        in b {
+        within b {
             c = thisWorld.sprout();  << thisWorld refers to b here >>
             in c {
                 d = 7
@@ -71,7 +71,7 @@ You could include some made-up programs in that final language as an example of 
         d = 23;
         b.update();
 
-        in b {
+        within b {
             output d    << prints 23 >>
         }
 
@@ -83,13 +83,15 @@ How will you get to that final vision?
     We plan on starting with notC as our base language, and then taking an incremental approach
     to adding worlds functionality to the language. The order of functionality implementation 
     will be as follows:
-        1) Add World class into syntax as first class value
-        2) Instantiation using "thisWorld"
-        3) Sprouting of new worlds using "Var = World.sprout()"
-        4) Changing state of world using "in World { block }"
-        5) Commit child world changes to parent world using "World.commit()"
-        6) Add comparison operations for Worlds (i.e. ==, != )
-        7) Pulling of current state from parent world using "World.update()"
+        1) Add World class into syntax as first class value                                             (Milestone 3 -- 2/23/2012)
+        2) Instantiation using "thisWorld"                                                              (Milestone 3 -- 2/23/2012)
+        3) Sprouting of new worlds using "Var = World.sprout()"                                         (Milestone 3 -- 2/23/2012)
+        4) Changing state of world using "within World { block }"                                       (Milestone 3 -- 2/23/2012)
+        5) Commit child world changes to parent world using "World.commit()"                            (Milestone 4 -- 3/8/2012)
+        6) Add comparison operations for Worlds (i.e. ==, != )                                          (Milestone 4 -- 3/8/2012)
+        7) Pulling of current state from parent world using "World.update()"                            (Milestone 4 -- 3/8/2012)
+        8) Commit child world changes to parent using a list of variables "World.commit(list_of_vars)"  (Milestone 5 -- 3/22/2012)
+        8) Update child world from parent using a list of variables "World.update(list_of_vars)"        (Milestone 5 -- 3/22/2012)
 
 ===================
 Collaboration Plan
