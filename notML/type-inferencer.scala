@@ -60,14 +60,40 @@ object SemanticHelpers {
   // type variable T with something else, T always sets its parent to
   // that other type
   //
-  def union(type1:Type, type2:Type): Unit = UnitT()// FILL ME IN
+  def union(type1:Type, type2:Type): Unit = {
+    // FILL ME IN
+    UnitT()
+  }
 
   // return a type's set representative; this function should use path
   // compression to optimize performance
-  def find(typ:Type): Type = UnitT()// FILL ME IN
+  def find(typ:Type): Type = {
+    // FILL ME IN
+    UnitT()
+    
+    // v This doesnt work lol v
+    /*typ match {
+      case t @ TVar(x, a) => {
+        if(t.parent == t) {
+          return t
+        } else {
+          t.parent match {
+            case t2 @ Some(Type) => {
+              t2 = find(t2)
+              return t2
+            }
+            case _ => return t
+          }
+        }
+      }
+    }*/
+  }
 
   // return all the type variables in a type
-  def varsIn(typ:Type): Set[TVar] = Set(TVar())// FILL ME IN
+  def varsIn(typ:Type): Set[TVar] = {
+    // FILL ME IN
+    Set(TVar())
+  }
 
 }
 
@@ -83,7 +109,6 @@ object Infer {
     // environment doesn't change, we'll define an inner function that
     // will leave env as a free variable
     def evalTo(t:Term): Type = t match {
-      // FILL ME IN
       case Seq(t1, t2) => {
         evalTo(t1)
         return evalTo(t2)
@@ -107,11 +132,17 @@ object Infer {
         case ListT(t) => UnitT()
         case _ => throw illTyped("Output expression mishap!")
       }
-      case HAssign(e1, e2) => e1 match {
-        case _ => UnitT()
+      case HAssign(e1, e2) => {
+        // FILL ME IN
+        e1 match {
+          case _ => UnitT()
+        }
       }
-      case TAssign(e1, e2) => e1 match {
-        case _ => UnitT()
+      case TAssign(e1, e2) => {
+        // FILL ME IN
+        e1 match {
+          case _ => UnitT()
+        }
       }
       case Num(n) => NumT()
       case Bool(b) => BoolT()
@@ -150,27 +181,38 @@ object Infer {
         }
       }
       case If(e, t1, t2) => evalTo(e) match {
+        // FILL ME IN
         case _ => UnitT()
       }
       case In(typ) => typ match {
+        // FILL ME IN
         case _ => UnitT()
       }
       case Call(ef, es) => {
+        // FILL ME IN
         UnitT()
       }
       case NotList(es) => {
+        // FILL ME IN
         UnitT()
       }
       case Head(e) => evalTo(e) match {
+        // FILL ME IN
         case _ => UnitT()
       }
       case Tail(e) => evalTo(e) match {
+        // FILL ME IN
         case _ => UnitT()
       }
       case Block(vbs, t) => {
-        UnitT()
+        val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitT())
+        val newEnv  = dummies.foldLeft( env )( (env, xv) => env + (xv._1 -> xv._2) )
+        val dummies2= for ( VarBind(x,e) <- vbs ) yield (x, e)
+        val newEnv2 = dummies2.foldLeft( env )( (env, xv) => env + (xv._1 -> eval(Config(xv._2, newEnv))))
+        eval(Config(t, newEnv2))
       }
       case Fun(f, xs, t) => {
+        // FILL ME IN
         UnitT()
       }
     }
