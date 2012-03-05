@@ -133,16 +133,12 @@ object Infer {
         case _ => throw illTyped("Output expression mishap!")
       }
       case HAssign(e1, e2) => {
-        // FILL ME IN
-        e1 match {
-          case _ => UnitT()
-        }
+        if( evalTo(e1) == evalTo(e2) ) return evalTo(e2)
+        else throw illTyped("list head assignment has mismatched types")
       }
       case TAssign(e1, e2) => {
-        // FILL ME IN
-        e1 match {
-          case _ => UnitT()
-        }
+        if( evalTo(e1) == evalTo(e2) ) return evalTo(e2)
+        else throw illTyped("list tail assignment has mismatched types")
       }
       case Num(n) => NumT()
       case Bool(b) => BoolT()
@@ -182,27 +178,29 @@ object Infer {
       }
       case If(e, t1, t2) => evalTo(e) match {
         // FILL ME IN
-        case _ => UnitT()
+        case BoolT() => {
+          if( evalTo(t1) == evalTo(t2) ) return evalTo(t2)
+          else throw illTyped("if-else statement types do not match")
+        } 
+        case _ => throw illTyped("if condition not a boolean")
       }
       case In(typ) => typ match {
         // FILL ME IN
-        case _ => UnitT()
+        case NumT() => NumT()
+        case BoolT() => BoolT()
+        case _ => throw illTyped("not num or bool")
       }
       case Call(ef, es) => {
-        // FILL ME IN
-        UnitT()
+        evalTo(ef)
       }
       case NotList(es) => {
-        // FILL ME IN
-        UnitT()
+        evalTo(es.head)
       }
-      case Head(e) => evalTo(e) match {
-        // FILL ME IN
-        case _ => UnitT()
+      case Head(e) => {
+        evalTo(e)
       }
-      case Tail(e) => evalTo(e) match {
-        // FILL ME IN
-        case _ => UnitT()
+      case Tail(e) => {
+        evalTo(e) 
       }
       case Block(vbs, t) => {
         val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitT())
@@ -212,8 +210,8 @@ object Infer {
         eval(Config(t, newEnv2))
       }
       case Fun(f, xs, t) => {
-        // FILL ME IN
-        UnitT()
+        if( evalTo(f) == evalTo(t) ) return evalTo(f)
+        else throw illTyped("function type and return type mismatch")
       }
     }
 
