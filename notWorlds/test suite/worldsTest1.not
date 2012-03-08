@@ -4,21 +4,21 @@
         c = unit,
         d = unit
     in
-        a = thisWorld;
-        b = a.sprout();
+        a := thisWorld;
+        b := a.sprout();
 
         within b {
-            c = thisWorld.sprout();  << thisWorld refers to b here >>
+            c := thisWorld.sprout();  << thisWorld refers to b here >>
             within c {
-                d = 7
+                d := 7
             };
             c.commit()
         };
-
+        
         b.commit();
         output d;   << prints 7 >>
 
-        d = 23;
+        d := 23;
         b.update();
 
         within b {

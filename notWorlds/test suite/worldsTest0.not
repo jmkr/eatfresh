@@ -7,6 +7,12 @@ a := thisWorld;
 b := a.sprout();
 within b {
 	c := 4;
-	output c
+	output a; << prints out world a >>
+	output b; << prints out world b >>
+	output c  << prints out 4 >>
 };
-output c
+output c;     << print out 2 >>
+b.commit();
+output a;  	  << prints out world a >>
+output b;     << prints out world b >> 
+output c      << prints out 4 >>

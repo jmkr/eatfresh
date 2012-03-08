@@ -202,15 +202,23 @@ object SemanticHelpers {
 
   // Returns a new world with an empty environment and parent world
   def newWorld(pw:World): World = {
-    World(Env(), pw)
+  	val newEnv = pw.env.foldLeft( Env() )( (env, xv) => { 
+	    //println(xv._1 + " -> " + gStore(xv._2.asInstanceOf[Address]))
+	    env + (xv._1 -> alloc(gStore(xv._2.asInstanceOf[Address]))) 
+	  } )
+    val newWorld = World(newEnv, pw)
+    gStore(newWorld.env(Var("thisWorld"))) = newWorld
+    newWorld
   }
 
   // Update child environment from parent
-  def updateWorld(cw:World): World = {
+  def updateWorld(cw:World): Unit = {
     cw.p match {
       case w @ World(e,p) => {
-        val newEnv = w.env.foldLeft( Env() )( (env, xv) => env + (xv._1 -> alloc(gStore(xv._2.asInstanceOf[Address]))) )
-        World(newEnv, cw.p) 
+        w.env foreach ( (a) => if (a._1 != Var("thisWorld")) gStore(a._2) match { 
+          case Address(a2) => gStore(cw.env(a._1)) = gStore(Address(a2))
+          case _ => gStore(cw.env(a._1)) = gStore(a._2) 
+        })
       }
       case _ => {
         cw
@@ -258,11 +266,11 @@ def eval(config:Config): Value = {
 		}
 		case Assign(x, e) => {
 			gStore(env(x)) = evalTo(e)
-      // if the right side of the assign is a world, update it so the the world has current environment 
-      gStore(env(x)) match {
-        case w @ World(e,p) => { gStore(env(x)) = updateWorld(w) }
-        case _ => UnitV()
-      }
+      		// if the right side of the assign is a world, update it so the the world has current environment 
+	        gStore(env(x)) match {
+	          case w @ World(e,p) => { updateWorld(w) }
+	          case _ => UnitV()
+      		}
 			UnitV()
 		}
 		case w @ While(e, t) => evalTo(e) match {
@@ -377,27 +385,34 @@ def eval(config:Config): Value = {
 			case (w @ World(e, p), s:Str) =>  gStore(w.env(Var(s.str))) //lookWorld(w, s.str)
 			case (w @ World(e, p), c:Call) => c.ef match {
 				case Var(x) => x match {
-					case "sprout" => { 
-            newWorld(w)
-          }
-					case "commit" => c.es match {
-						//println("foundcommit")
-            //w.env.foldLeft( Env(Map[String, Value]()) )( (a, b) => a + (b.str) -> alloc(evalTo(b)) )
-            case Nil =>{
-              w.env.map( (a) => gStore(a._2) match { 
-                case Address(a2) => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(Address(a2))
-                case _ => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(a._2) 
-              })
-              UnitV()
-            }
-            case _ => {
-              println("non-empty commit")
-              UnitV()
-            }
+					case "sprout" => {
+						val nw = newWorld(w) 
+						//gStore(nw.env(Var("thisWorld"))) = nw
+						nw
 					}
-					case "update" => {
-						println("foundupdate")
-						UnitV()
+					case "commit" => c.es match {
+			            case Nil =>{
+			              w.env foreach ( (a) => if(a._1 != Var("thisWorld")) gStore(a._2) match { 
+			                case Address(a2) => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(Address(a2))
+			                case _ => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(a._2) 
+			              })
+			              UnitV()
+			            }
+			            case _ => {
+			              println("non-empty commit")
+			              UnitV()
+			            }
+					}
+					case "update" => c.es match {
+						case Nil => {
+							//println("empty update")
+							updateWorld(w)
+							UnitV()
+						}
+						case _ => {
+							println("non-empty update")
+							UnitV()
+						}
 					}
 					case _ => throw undefined("illegal object field access")
 				}

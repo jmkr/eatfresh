@@ -1,0 +1,13 @@
+var
+    a = unit,
+	b = unit,
+	c = 2
+in
+a := thisWorld;
+b := a.sprout();
+within b { c := 4 };
+output a."c";	<< prints out 2 >>
+output b."c";	<< prints out 4 >>
+b.commit();
+output a."c";	<< prints out 4 >>
+output b."c"	<< prints out 4 >>
