@@ -169,37 +169,6 @@ object SemanticHelpers {
     }
   }
 
-  // look up variable in the world chain of a record
-  def lookWorld(w:World, str:String): Value = {
-    w(Var(str)) match {
-      case Address(a) => gStore(Address(a))
-      case _ => {
-        w.p match {
-          case Address(a) => {
-            gStore(Address(a)) match {
-              case World(e, p) => lookWorld(World(e,p), str)
-              case Address(a2) => gStore(Address(a2)) match {
-                case World(e, p) => lookWorld(World(e,p), str)
-                case _ => throw undefined("no parent world")
-              }
-              case _ => throw undefined("no parent world")
-            }
-          }
-          case _ => throw undefined("no parent world")
-        }
-      }
-    }
-  }
-
-  // Sprout a new world
-  /*  NO LONGER USED
-  def sproutWorld(pw:World): World = {
-    val newEnv = pw.env.foldLeft( Env() )((env, xv) => env + (xv._1 -> alloc(gStore(xv._2.asInstanceOf[Address]))) )
-    //println(pw);
-    World(newEnv, pw)
-  }
-  */
-
   // Returns a new world with an empty environment and parent world
   def newWorld(pw:World): World = {
   	val newEnv = pw.env.foldLeft( Env() )( (env, xv) => { 
