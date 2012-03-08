@@ -62,10 +62,9 @@ object SemanticHelpers {
   //
   def union(type1:Type, type2:Type): Unit = {
     // FILL ME IN (slide 35/42 in 07-notML-implicit.pdf shows how)
-
-    if(type1 == type2) { return } //true if they are equal
     
     (type1, type2) match {
+      case (_, _) if type1 == type2 => return
     	case (v @ TVar(_, Some(a)), _) => {
     		if( ! varsIn(type2).contains(v) ) v.parent = Some(type2)
     		else throw illTyped("tried to unify incompatible types")
@@ -80,7 +79,7 @@ object SemanticHelpers {
     	case (( NumT() | StrT() | TVar(_, Some(AL)) ), v @ TVar(_, _)) => {
     		v.parent = Some(type1)
     	}
-    	case (ListT(t1), liststT(t2)) => {
+    	case (ListT(t1), ListT(t2)) => {
     		union(t1, t2)
     	}
     	case (FunT(ts1, t1), FunT(ts2, t2)) => {
@@ -114,29 +113,21 @@ object SemanticHelpers {
       }
       case _ => return typ
     }
-    
-    // v This doesnt work lol v
-    /*typ match {
-      case t @ TVar(x, a) => {
-        if(t.parent == t) {
-          return t
-        } else {
-          t.parent match {
-            case t2 @ Some(Type) => {
-              t2 = find(t2)
-              return t2
-            }
-            case _ => return t
-          }
-        }
-      }
-    }*/
   }
 
   // return all the type variables in a type
   def varsIn(typ:Type): Set[TVar] = {
     // FILL ME IN
     Set(TVar())
+    typ match {
+      case NumT() | BoolT() | StrT() | UnitT() => Set()
+      case t @ TVar(x, a) => Set(t)
+      case ListT(ltyp) => varsIn(ltyp)
+      case FunT(ts, t) => {
+        val theCoolestListEver = ts.foldLeft(Set[TVar]())( (a, b) => a.union(varsIn(b)) )
+        theCoolestListEver.union(varsIn(t))
+      }
+    }
   }
 
 }
@@ -158,102 +149,113 @@ object Infer {
         return evalTo(t2)
       }
       case Assign(x, e) => {
-        if(evalTo(e) == env(x)) UnitT()
-        else throw illTyped("Assignment type miss-match!!!!!!")
+        union(env(x), evalTo(e))
+        UnitT()
       }
-      case w @ While(e, t) => evalTo(e) match {
-        case BoolT() => {
-          evalTo(t)
-          UnitT()
-        }
-        case _ => throw illTyped("While expression mishap!")
+      case w @ While(e, t) => {
+        union(evalTo(e), BoolT())
+        evalTo(t)
+        UnitT()
       }
-      case Out(e) => evalTo(e) match {
-        case BoolT() => UnitT()
-        case NumT() => UnitT()
-        case StrT() => UnitT()
-        case FunT(ts, t) => UnitT()
-        case ListT(t) => UnitT()
-        case _ => throw illTyped("Output expression mishap!")
+      case Out(e) => {
+        evalTo(e)
+        UnitT()
       }
       case HAssign(e1, e2) => {
-        if( evalTo(e1) == evalTo(e2) ) return evalTo(e2)
-        else throw illTyped("list head assignment has mismatched types")
+        val t1 = evalTo(e1)
+        val t2 = evalTo(e2)
+        union(t1,ListT(TVar()))
+        union(t2, TVar())
+        UnitT()
       }
       case TAssign(e1, e2) => {
-        if( evalTo(e1) == evalTo(e2) ) return evalTo(e2)
-        else throw illTyped("list tail assignment has mismatched types")
+        val t1 = evalTo(e1)
+        val t2 = evalTo(e2)
+        union(t1,ListT(TVar()))
+        union(t2, ListT(TVar()))
+        UnitT()
       }
       case Num(n) => NumT()
       case Bool(b) => BoolT()
       case Str(str) => StrT()
       case NotUnit() => UnitT()
       case x:Var => env(x)
-      case Not(e) => evalTo(e) match {
-        case _ => BoolT()
+      case Not(e) => {
+        union(evalTo(e), BoolT())
+        BoolT()
       }
       case BinOp(bop, e1, e2) => bop match {
         case Equal => BoolT()
-        case _ => (evalTo(e1), evalTo(e2)) match {
-          case (BoolT(), BoolT()) => bop match {
-            case And => BoolT()
-            case Or  => BoolT()
-            case _   => throw illTyped("illegal operation on bools")
-          }
-          case (NumT(), NumT()) => bop match {
-            case Add => NumT()
-            case Sub => NumT()
-            case Mul => NumT()
-            case Div => NumT()
-            case Lte => BoolT()
-            case _   => throw illTyped("illegal operation on nums")
-          }
-          case (StrT(), StrT()) => bop match {
-            case Add => StrT()
-            case Lte => BoolT()
-            case _   => throw illTyped("illegal operation on strings")
-          }
-          case (_, ListT(typ)) => bop match {
-            case Cons => ListT(typ)
-            case _ => throw illTyped("illegal operation on lists")
-          }
-          case _ => throw illTyped("illegal binary operation")
+        case Or | And => {
+          union(evalTo(e1), BoolT())
+          union(evalTo(e2), BoolT())
+          BoolT()
         }
+        case Div | Mul | Sub => {
+          union(evalTo(e1), NumT())
+          union(evalTo(e2), NumT())
+          NumT()
+        }
+        case Add => {
+          union(evalTo(e1), TVar())
+          union(evalTo(e2), TVar())
+          evalTo(e1)
+        }
+        case Lte => {
+          union(evalTo(e1), TVar())
+          union(evalTo(e2), TVar())
+          BoolT()
+        }
+        case Cons => {
+          union(evalTo(e2), ListT(evalTo(e1)))
+          evalTo(e2)
+        }
+        case _ => throw illTyped("tried to unify incompatible types")
       }
-      case If(e, t1, t2) => evalTo(e) match {
-        // FILL ME IN
-        case BoolT() => {
-          if( evalTo(t1) == evalTo(t2) ) return evalTo(t2)
-          else throw illTyped("if-else statement types do not match")
-        } 
-        case _ => throw illTyped("if condition not a boolean")
+      case If(e, t1, t2) => {
+        union(evalTo(e), BoolT())
+        union(evalTo(t1), evalTo(t2))
+        evalTo(t1)
       }
       case In(typ) => typ match {
-        // FILL ME IN
         case NumT() => NumT()
         case BoolT() => BoolT()
-        case _ => throw illTyped("not num or bool")
+        case _ => throw illTyped("input not num or string")
       }
       case Call(ef, es) => {
-        evalTo(ef)
+        // FILL ME IN
+        //val fun = evalTo(ef)
+        //union(evalTo(ef), fun)
+        //es.map( (m) => union(TVar(), evalTo(m)) )
+        TVar()
       }
       case NotList(es) => {
+        // FILL ME IN
         evalTo(es.head)
       }
       case Head(e) => {
+        union(evalTo(e), ListT(TVar()))
         evalTo(e)
       }
       case Tail(e) => {
-        evalTo(e) 
+        union(evalTo(e), ListT(TVar()))
+        evalTo(e)
       }
       case Block(vbs, t) => {
-        val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitT())
+        val dummies = for ( VarBind(x,_) <- vbs ) yield (x, TVar())
         val newEnv  = dummies.foldLeft( env )( (env, xv) => env + (xv._1 -> xv._2) )
+
         val dummies2= for ( VarBind(x,e) <- vbs ) yield (x, e)
-		println(newEnv)
-        val newEnv2 = dummies2.foldLeft( env )( (env, xv) => env + (xv._1 -> eval(Config(xv._2, newEnv))))
-		println(newEnv2)
-        eval(Config(t, newEnv2))
+        val typeList = dummies2.foldLeft(List[Type]())( (l, xv)  => l ::: List(evalTo(xv._2)) )
+        
+        val zippedList = dummies zip typeList
+        zippedList.map( (m) => union(m._1._2, m._2) )
+
+        //typeList.map( (m) => union(TVar(), m) )
+		//println(newEnv)
+        //val newEnv2 = dummies2.foldLeft( env )( (env, xv) => env + (xv._1 -> eval(Config(xv._2, newEnv))))
+		//println(newEnv2)
+        eval(Config(t, newEnv))
       }
       case Fun(f, xs, t) => {
         if( evalTo(f) == evalTo(t) ) return evalTo(f)
