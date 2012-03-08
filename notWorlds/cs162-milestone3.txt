@@ -1,0 +1,30 @@
+CS162 Milestone 3
+NotWorlds
+
+David Schnurr
+James Ebentier
+Vincent Alindogan
+
+====================
+
+(See cs162-projectplan-updated.txt for our update project plan. It now includes
+deliverable dates and minor syntax changes)
+
+For milestone 3 we completed the first four tasks from our project plan. The current
+world can be referenced using 'thisWorld', a world can be sprouted using
+worldVar.sprout(), and arbitrary code can be executed inside of a world using 
+'within worldVar { Term }'.
+
+To compile our interpreter, use the following command:
+
+fsc syntax.scala interpreter.scala
+
+We have included a few test cases named worldsTestX.not and their correspondeding 
+outputs in worldsTest0.out. Run these programs using the following command:
+
+scala notWorlds worldsTestX.not
+
+worldsTest0.not - Shows basic sprouting and executing code inside a sprouted world
+worldsTest1.not - Outputs a world and a world sprouted from it to show it has a 
+                  reference to the parent.
+worldsTest2.not - Shows sprouting off of sprouted worlds

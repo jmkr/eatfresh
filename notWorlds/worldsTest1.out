@@ -1,0 +1,2 @@
+[World(Map(Var(thisWorld) -> Address(1), Var(a) -> Address(2), Var(b) -> Address(3), Var(c) -> Address(4)),unit)]
+[World(Map(Var(thisWorld) -> Address(5), Var(a) -> Address(6), Var(b) -> Address(7), Var(c) -> Address(8)),World(Map(Var(thisWorld) -> Address(1), Var(a) -> Address(2), Var(b) -> Address(3), Var(c) -> Address(4)),unit))]
