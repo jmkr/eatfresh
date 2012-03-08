@@ -61,15 +61,59 @@ object SemanticHelpers {
   // that other type
   //
   def union(type1:Type, type2:Type): Unit = {
-    // FILL ME IN
-    UnitT()
+    // FILL ME IN (slide 35/42 in 07-notML-implicit.pdf shows how)
+
+    if(type1 == type2) { return } //true if they are equal
+    
+    (type1, type2) match {
+    	case (v @ TVar(_, Some(a)), _) => {
+    		if( ! varsIn(type2).contains(v) ) v.parent = Some(type2)
+    		else throw illTyped("tried to unify incompatible types")
+    	}
+    	case (_, v @ TVar(_, Some(a))) => {
+    		if( ! varsIn(type1).contains(v) ) v.parent = Some(type1)
+    		else throw illTyped("tried to unify incompatible types")
+    	}
+    	case (v @ TVar(_, _), ( NumT() | StrT() | TVar(_, Some(AL)) )) => {
+    		v.parent = Some(type2)
+    	}
+    	case (( NumT() | StrT() | TVar(_, Some(AL)) ), v @ TVar(_, _)) => {
+    		v.parent = Some(type1)
+    	}
+    	case (ListT(t1), liststT(t2)) => {
+    		union(t1, t2)
+    	}
+    	case (FunT(ts1, t1), FunT(ts2, t2)) => {
+    		if(ts1.length != ts2.length) throw illTyped("tried to unify incompatible types")
+    		val args = ts1 zip ts2
+    		args.map((ts) => union(ts._1, ts._2))
+    		union(t1, t2)
+    	}
+    	case _ => throw illTyped("tried to unify incompatible types")
+    }
   }
 
   // return a type's set representative; this function should use path
   // compression to optimize performance
   def find(typ:Type): Type = {
     // FILL ME IN
-    UnitT()
+    typ match {
+      case t @ TVar(x, a) => {
+        if(t.parent == t) {
+          return t
+        } else {
+          t.parent match {
+            case Some(atype) => {
+              val found = find(atype)
+              t.parent = Some(found)
+              return found
+            }
+            case _ => return typ
+          }
+        }
+      }
+      case _ => return typ
+    }
     
     // v This doesnt work lol v
     /*typ match {
@@ -206,7 +250,9 @@ object Infer {
         val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitT())
         val newEnv  = dummies.foldLeft( env )( (env, xv) => env + (xv._1 -> xv._2) )
         val dummies2= for ( VarBind(x,e) <- vbs ) yield (x, e)
+		println(newEnv)
         val newEnv2 = dummies2.foldLeft( env )( (env, xv) => env + (xv._1 -> eval(Config(xv._2, newEnv))))
+		println(newEnv2)
         eval(Config(t, newEnv2))
       }
       case Fun(f, xs, t) => {
