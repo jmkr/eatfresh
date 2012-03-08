@@ -60,15 +60,24 @@ object SemanticHelpers {
   // type variable T with something else, T always sets its parent to
   // that other type
   //
-  def union(type1:Type, type2:Type): Unit = // FILL ME IN
+  def union(type1:Type, type2:Type): Unit = {
+    // FILL ME IN
+    UnitT()
+
+  }
 
   // return a type's set representative; this function should use path
   // compression to optimize performance
-  def find(typ:Type): Type = // FILL ME IN
+  def find(typ:Type): Type = {
+    // FILL ME IN
+    UnitT()
+  }
 
   // return all the type variables in a type
-  def varsIn(typ:Type): Set[TVar] = // FILL ME IN
-
+  def varsIn(typ:Type): Set[TVar] = {
+    // FILL ME IN
+    Set(TVar())
+  }
 }
 
 //---------- TYPE INFERENCER ----------
@@ -83,7 +92,69 @@ object Infer {
     // environment doesn't change, we'll define an inner function that
     // will leave env as a free variable
     def evalTo(t:Term): Type = t match {
-      // FILL ME IN
+      case Seq(t1,t2) => {
+        evalTo(t1)
+      }
+      case Assign(x,e) => {
+        evalTo(e)
+      }
+      case While(e,t) => {
+        evalTo(t)
+      }
+      case Out(e) => {
+        evalTo(e)
+      }
+      case HAssign(e1,e2) => {
+        evalTo(e2)
+      }
+      case TAssign(e1,e2) => {
+        evalTo(e2)
+      }
+      case Num(n) => {
+        NumT()
+      }
+      case Bool(b) => {
+        BoolT()
+      }
+      case Str(str) => {
+        StrT()
+      }
+      case NotUnit() => {
+        BoolT()
+      }
+      case Var(x) => {
+        UnitT()
+      }
+      case Not(e) => {
+        BoolT()
+      }
+      case BinOp(op,e1,e2) => {
+        evalTo(e2)
+      }
+      case If(e,t1,t2) => {
+        evalTo(t2)
+      }
+      case In(tp) => {
+        UnitT()
+      }
+      case Call(ef,es) => {
+        evalTo(ef)
+      }
+      case NotList(es) => {
+        UnitT()
+      }
+      case Head(e) => {
+        evalTo(e)
+      }
+      case Tail(e) => {
+        evalTo(e)
+      }
+      case Block(vds,t) => {
+        UnitT()
+      }
+      case Fun(f,xs,t) => {
+        UnitT()
+      }
     }
 
     evalTo(config.t)
