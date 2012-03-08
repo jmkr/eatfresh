@@ -1,0 +1,12 @@
+var
+    a = unit,
+	b = unit,
+	c = 2
+in
+a := thisWorld;
+b := a.sprout();
+within b {
+	c := 4;
+	output c
+};
+output c

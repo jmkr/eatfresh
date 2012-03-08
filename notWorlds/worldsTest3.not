@@ -1,0 +1,21 @@
+var
+    a = unit,
+	b = unit,
+	c = unit,
+    d = 2
+in
+a := thisWorld;
+b := a.sprout();
+c := b.sprout();
+within b {
+	d := 4
+};
+within c {
+	d := 2
+};
+output (b=c);
+within c {
+	d := 4
+};
+output (b=c)
+

@@ -217,6 +217,12 @@ object SemanticHelpers {
       }
     }
   }
+
+  def compareWorlds(w1:World, w2:World): BoolV = {
+  	val zipped = w1.env zip w2.env
+  	zipped map ( m => if( gStore(m._1._2) != gStore(m._2._2) ) return BoolV(false) )
+  	return BoolV(true)
+  }
     
 }
 
@@ -333,7 +339,13 @@ def eval(config:Config): Value = {
 					case a:Address => gStore(a)
 					case v => v
 				}
-				BoolV(v1 == v2)
+				(v1, v2) match {
+					case (w1 @ World(we1, wp1), w2 @ World(we2, wp2)) => {
+						compareWorlds(w1, w2)
+					}
+					case _ => BoolV(v1 == v2)
+				}
+				//BoolV(v1 == v2)
 			}
 			case _ => (evalTo(e1), evalTo(e2)) match {
 				case (BoolV(b1), BoolV(b2)) => bop match {
