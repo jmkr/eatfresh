@@ -1,0 +1,7 @@
+var
+  double=f(x)=>{x+x},
+  list=[double("str"),double("aaaa"),double(double("str"))],
+  x = "aaaa"
+in x::list
+
+

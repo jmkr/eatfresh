@@ -1,0 +1,1 @@
+vardouble=f(x) =>{ if(x) x else x}in input true

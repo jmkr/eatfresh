@@ -1,0 +1,1 @@
+vardouble=f(x) =>{x+x}, do2 = f(g,y) => { g(g(y)) }in do2(double, 5)

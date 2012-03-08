@@ -1,0 +1,4 @@
+var
+d1 = f(x,y)=> {if(x) {y+y} else y  }
+in d1(d1(true,"str"),d1(true,"str"))
+

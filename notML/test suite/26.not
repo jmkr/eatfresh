@@ -1,0 +1,13 @@
+var
+print_list = print_list(list) => 
+{
+  if (!(list = [])) {
+    output list.head;
+    print_list(list.tail)
+  }
+},
+list=[1,2,3]
+
+in
+print_list(list)
+

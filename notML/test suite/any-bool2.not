@@ -1,0 +1,5 @@
+var
+d1 = f(x)=> {true}
+in d1(true) 
+
+

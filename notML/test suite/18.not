@@ -1,0 +1,6 @@
+var
+  list=[1,2]
+in
+output list
+
+

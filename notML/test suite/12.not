@@ -1,0 +1,6 @@
+var
+	bl = true
+in 
+output bl;
+bl:=20;
+output bl
