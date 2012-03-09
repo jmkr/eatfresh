@@ -1,0 +1,13 @@
+Kenneth Hwang
+John Meeker
+
+Milestone4.
+
+
+Project writeup draft is located in the file 'final writeup.docx'.
+
+For our project, the syntax does not appear to be parsing input corretly. Further help from certain instructed will be sought after for syntax parsing; as suggested by the professor. 
+
+The project otherwise should function as specified. The compilation should throw an error because commit has not been implemented yet. 
+
+
