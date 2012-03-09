@@ -1,7 +1,7 @@
 // John Meeker
 // Ken Hwang
 
-package cs162.worlds.syntax
+package cs162.Worlds.syntax
 
 import java.io._
 import scala.io._

@@ -137,7 +137,7 @@ package cs162.Worlds.interpreter {
 	  	import Interp._
 	
 	  	// lift program to initial configuration.
-	  	def inject(prog:Program): Config = { Config(prog.t, Env()) }
+	  	def inject(prog:Program): Config = { Config(prog.t, World(Env(), UnitV())) }
 	
 	  	// allocate value into store; unlike the helper function specified
 	  	// in the semantics this one takes a single value and returns a
@@ -155,13 +155,13 @@ package cs162.Worlds.interpreter {
 		    case None => o.o get "proto" match {
 		      case None => UnitV()
 		      case Some(a:Address) => gStore(a) match {
-			case o:Object => lookProto(o, str)
-			case _ => throw undefined("proto doesn't refer to an object")
+				case o:Object => lookProto(o, str)
+				case _ => throw undefined("proto doesn't refer to an object")
 		      }
 		      case _ => throw undefined("proto isn't an address")
 		    }
-		  }
 		}
+		
 		
 		// TODO:: look up variable in world
 		///////----------------------------
@@ -177,9 +177,9 @@ package cs162.Worlds.interpreter {
 		    val newWorld = World(newEnv, pw)
 		    gStore(newWorld.env(Var("thisWorld"))) = newWorld
 		    newWorld
-	  }
+	  	}
 	
-		
+	}	
 		
 		//TODO:: make update process to push changes from parent world to child environment 
 		
@@ -213,7 +213,7 @@ package cs162.Worlds.interpreter {
 	
 	  	// the evaluation function [[.]] \in Config -> Value
 	  	def eval(config:Config): Value = {
-	    	val env = config.env
+	    	val env = config.world.env
 	
 	    	// since we'll be making lots of recursive calls where the
 	    	// environment doesn't change, we'll define an inner function that
@@ -345,9 +345,12 @@ package cs162.Worlds.interpreter {
 					val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitV())
 					val newEnv = dummies.foldLeft( env )(
 		  			(env, xv) => env + (xv._1 -> alloc(xv._2)) )
-	
-					for ( VarBind(x, e) <- vbs ) gStore(newEnv(x)) = eval(Config(e, newEnv))
-					eval(Config(t, newEnv))
+		
+					for ( VarBind(x, e) <- vbs ) gStore(newEnv(x)) = eval(Config(e, World(newEnv, config.world.p)))
+					
+					val newWorld = World(newEnv, UnitV());
+					gStore(newEnv(Var("thisWorld"))) = newWorld					
+					eval(Config(t, newWorld))
 	      		}
 	      		case f:Fun => FunClo(env, f)
 	
@@ -385,6 +388,14 @@ package cs162.Worlds.interpreter {
 					}
 					case _ => throw undefined("illegal object field access")
 	      		}*/
+				
+				//TODO:: this is how sprouting should be handled
+				case Sprout() => {
+					
+					val newWorld = World(Env(), UnitV());
+					gStore(Address()) = newWorld					
+					eval(Config(t, newWorld))				
+				}
 	
 				//TODO:: add inside block functionality
 				case Inside(w, t) => evalTo(w) match {
@@ -414,6 +425,8 @@ package cs162.Worlds.interpreter {
 					}
 					case _ => throw undefined("illegal method call")
 	      		}
+		
+				/*
 				case VarBind(x, e) => {
 					gStore(env(x)) match {
 						case w @ World(e,p) => {
@@ -424,7 +437,7 @@ package cs162.Worlds.interpreter {
 						case _ => UnitV()						
 					}
 					UnitV()
-				}
+				}*/
 	    	}
 	    	evalTo(config.t)
 		}
