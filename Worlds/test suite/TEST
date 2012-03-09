@@ -1,11 +1,28 @@
-var
-  x = 1
-in newWorld(w1)
+var a = 10,
+	b = thisWorld.sprout(),
+	c = thisWorld.sprout()
 	
-	w1.sprout(w2);
-	output w1.x;
-	w2.x := 2;
-	output w1.x;
-	w2.commit;
-	output w1.x
+in
+	inside b{
+		a:=20
+	}
 
+	inside c{
+		a:=30
+	}
+
+	inside b{
+		output a 	<<should be 20>>
+	}
+	
+	output a		<<should be 10>>
+	
+	b.commit()
+	
+	output a		<<should be 20>>
+		
+	c.commit()		
+
+	output a		<<should be 30>> 
+	
+	

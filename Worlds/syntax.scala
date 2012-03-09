@@ -1,3 +1,6 @@
+// John Meeker
+// Ken Hwang
+
 package cs162.worlds.syntax
 
 import java.io._
@@ -17,7 +20,7 @@ case class Seq(t1:Term, t2:Term) extends Cmd
 case class Assign(x:Var, e:Exp) extends Cmd
 case class While(e:Exp, t:Term) extends Cmd
 case class Out(e:Exp) extends Cmd
-case class Sprout(w1:Var, w2:Var) extends Cmd
+case class Inside(w:Var, t:Term) extends Cmd
 case class Commit(w:Var) extends Cmd
 case class Update(e1:Exp, e2:Exp, e3:Exp) extends Cmd
 
@@ -39,6 +42,7 @@ case class Obj(fbs:List[FldBind]) extends Exp
 case class Access(e1:Exp, e2:Exp) extends Exp
 case class Method(xs:List[Var], t:Term) extends Exp
 case class MCall(eO:Exp, eF:Exp, es:List[Exp]) extends Exp
+case class Sprout() extends Exp
 
 // bindings for Block and Obj respectively
 case class VarBind(x:Var, e:Exp) extends AST
@@ -238,7 +242,12 @@ object PrettyPrint {
 	printEdges(myLbl, lbls)
 	myLbl
       }
-	case Sprout(w1, w2) => {
+	case Sprout() => {
+	val myLbl = getid
+	//printNode(myLbl, w2)
+	myLbl
+      }
+	case Inside(w, t) => {
 	val myLbl = getid
 	//printNode(myLbl, w2)
 	myLbl
@@ -311,7 +320,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   // reserved keywords
   lexical.reserved += ( "var", "if", "else", "while", "true",
 		       "false", "input", "output", "unit",
-		       "num", "str", "in", "self" )
+		       "num", "str", "in", "self", "thisWorld", "sprout", "inside" )
 
   lexical.delimiters += ( "+", "-", "*", "/", "!", "&", "|", "=",
 			 "<=", "{", "}", "(", ")", ":=", ";", ",",
@@ -359,7 +368,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   (_.reduceLeft(Seq(_,_)))
 
   // commands
-  lazy val CmdP: P[Cmd] = ( assignP | whileP | outputP | updateP )
+  lazy val CmdP: P[Cmd] = ( assignP | whileP | outputP | updateP | insideP )
 
   // expressions (factored to E for precedence issues)
   lazy val ExpP: P[Exp] = ( binopP | E )
@@ -381,6 +390,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
     | strP
     | unitP
     | varP
+    | sproutP
     | "(" ~> ExpP <~ ")"
   )
 
@@ -396,15 +406,14 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   lazy val outputP: P[Out] = "output" !!! "output" ~> ExpP ^^ (Out)
 
   // Sprout
-  lazy val sproutP: P[Sprout] = "sprout" !!! opt(varP) ~ ("." ~ "sprout" ~ "(" ~> varP <~ ")") ^^
-  { case w1 ~ w2 => w1 match {
-	    case Some(v) => Sprout(v, w2)
-	    case None    => Sprout(Var("root"), w2) 
-	  }
-  }
+  lazy val sproutP: P[Sprout] = "thisWorld" ~> "." ~> "sprout" ~> "(" ~> ")" ^^^ (Sprout())
+
+  // Inside
+  lazy val insideP: P[Inside] = "inside" !!! "inside" ~> varP ~ ("{" ~> TermP <~ "}") ^^ 
+  { case w ~ t => Inside(w, t) }
 
   // commit
-  lazy val commitP: P[Commit] = "commit" !!! varP <~ ("." ~ "commit") ^^
+  lazy val commitP: P[Commit] = "commit" !!! varP <~ ("." ~ "commit()") ^^
   { case w => Commit(w) }
 
   // object field access
