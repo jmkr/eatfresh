@@ -197,7 +197,13 @@ object SemanticHelpers {
 
   def compareWorlds(w1:World, w2:World): BoolV = {
   	val zipped = w1.env zip w2.env
-  	zipped map ( m => if( gStore(m._1._2) != gStore(m._2._2) ) return BoolV(false) )
+  	zipped map ( m => {
+  		if( m._1._1 != Var("thisWorld") ) {
+  			if( gStore(m._1._2) != gStore(m._2._2) ) {
+  				return BoolV(false)
+  			}
+  		}
+  	})
   	return BoolV(true)
   }
     
@@ -260,7 +266,7 @@ def eval(config:Config): Value = {
 			def val2str(v:Value): String = v match {
 				case a:Address => "[" + obj2str(a) + "]"
 				case StringV(s) if s == "" => "\"\""
-        case w @ World(e, p) => "[" + w + "]"
+        		case w @ World(e, p) => "[" + w + "]"
 				case other => other.toString
 			}
 			def obj2str(a:Address): String = gStore(a) match {
@@ -270,9 +276,9 @@ def eval(config:Config): Value = {
 						m.foldLeft("") ( (s, b) => b._2 match { case Address(a2) => s + ", " + b._1 + " : " + val2str(gStore(Address(a2))); case _ => s } )
 					}
 				}
-        case w @ World(e, p) => w.toString
-        case Address(a) => gStore(Address(a)).toString
-        case other => other.toString
+        		case w @ World(e, p) => w.toString
+        		case Address(a) => gStore(Address(a)).toString
+        		case other => other.toString
 				//case _ => throw undefined("error in Out")
 			}
 			println(val2str(evalTo(e)))

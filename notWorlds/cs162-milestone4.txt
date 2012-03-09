@@ -1,0 +1,30 @@
+CS162 Milestone 4
+NotWorlds
+
+David Schnurr
+James Ebentier
+Vincent Alindogan
+
+====================
+
+For milestone 4 we completed tasks 5 - 7 from our project plan and also 
+created a rought draft for our final project report. You can now commit child
+world changes back to the parent world using "World.commit()", update the
+child with changes from the parent using "World.update()", and test whether the
+values in two worlds are equal using "World1 = World2".
+
+To compile our interpreter, use the following command:
+
+fsc syntax.scala interpreter.scala
+
+We have included a couple more test cases that should be run like this:
+
+scala notWorlds worldsTestX.not
+
+Each input file has a corresponding output file
+
+worldsTest3.not - Shows committing a child world back into its parent
+worldsTest4.not - Shows updating a child world with changes in its parent
+worldsTest5.not - Shows both committing and updating worlds
+worldsTest6.not - Shows testing equality of two worlds
+
