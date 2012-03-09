@@ -381,13 +381,50 @@ package cs162.Worlds.interpreter {
 	      		}
 			
 				//TODO:: add commit and sprout operations to access
-	      		case Access(e1, e2) => (evalTo(e1), evalTo(e2)) match {
+	      		case Access(e1, e2) => (evalTo(e1), e2) match {
+					case (a:Address, s:Str) => gStore(a) match { 
+						case o @ Object(m) => lookProto(o, s.str)
+						case _ => throw undefined("illegal object field access")
+					}
+					case (w @ World(e, p), s:Str) =>  gStore(w.env(Var(s.str))) //lookWorld(w, s.str)
+					case (w @ World(e, p), c:Call) => c.ef match {
+						case Var(x) => x match {
+							
+							//TODO:: sprout
+							case "sprout" => {
+								val nw = newWorld(w) 
+								nw
+							}
+							
+							//TODO:: commit
+							case "commit" => c.es match {
+						    	case Nil =>{
+							    	w.env foreach ( (a) => if(a._1 != Var("thisWorld")) gStore(a._2) match { 
+							        	case Address(a2) => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(Address(a2))
+							            case _ => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(a._2) 
+							        })
+							        UnitV()
+							    }
+							    case _ => {
+							    	println("non-empty commit")
+							        UnitV()
+							    }
+							}
+						case _ => throw undefined("illegal object field access")
+						}
+					case _ => throw undefined("illegal object field access")
+					}
+					case _ => throw undefined("illegal object field access")
+				} 
+	
+				//ORIG
+				/*case Access(e1, e2) => (evalTo(e1), evalTo(e2)) match {
 					case (a:Address, StringV(str)) => gStore(a) match {
 		  				case o:Object => lookProto(o, str)
 		  				case _ => throw undefined("access: address of a non-object")
 					}
 					case _ => throw undefined("illegal object field access")
-	      		}
+	      		}*/
 	
 	      		case m:Method => MethClo(env, m)
 	      		case MCall(er, ef, es) => (evalTo(er), evalTo(ef)) match {
