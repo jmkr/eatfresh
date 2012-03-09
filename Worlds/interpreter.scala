@@ -170,20 +170,20 @@ package cs162.Worlds.interpreter {
 				}
 			}
 		}
-	//ORIG
-	/*
-	  def lookProto(o:Object, str:String): Value = o.o get str match {
-	    case Some(v) => v
-	    case None => o.o get "proto" match {
-	      case None => UnitV()
-	      case Some(a:Address) => gStore(a) match {
-		case o:Object => lookProto(o, str)
-		case _ => throw undefined("proto doesn't refer to an object")
-	      }
-	      case _ => throw undefined("proto isn't an address")
-	    }
-	  }
-	}*/
+		//ORIG
+		/*
+		  def lookProto(o:Object, str:String): Value = o.o get str match {
+		    case Some(v) => v
+		    case None => o.o get "proto" match {
+		      case None => UnitV()
+		      case Some(a:Address) => gStore(a) match {
+			case o:Object => lookProto(o, str)
+			case _ => throw undefined("proto doesn't refer to an object")
+		      }
+		      case _ => throw undefined("proto isn't an address")
+		    }
+		  }
+		}*/
 		
 		// TODO:: look up variable in world
 		///////----------------------------
@@ -238,6 +238,7 @@ package cs162.Worlds.interpreter {
 	      		case Assign(x, e) => {
 					gStore(env(x)) = evalTo(e)
 					UnitV()
+					//TODO:: world assignment?
 	      		}
 	      		case w @ While(e, t) => evalTo(e) match {
 					case BoolV(true) => {
@@ -250,22 +251,42 @@ package cs162.Worlds.interpreter {
 	      		case Out(e) => {
 				// NOTE: if we try to output an object whose fields
 				// recursively refer back to that object, then this code will
-				// go into an infinite loop
-	
-					def obj2str(a:Address): String = gStore(a) match {
-		  				case Object(o) => o.foldLeft( "" ){ 
-		    				case (s, (str, v)) => s + ", " + str + " : " + val2str(v) 
-		  				}
-		  				case _ => throw undefined("outputting illegal value")
-					}
+				// go into an infinite loop					
 					def val2str(v:Value): String = v match {
 		  				case a:Address => "[" + obj2str(a) + "]"
 		  				case StringV(s) if s == "" => "\"\""
-		  				case other => other.toString
+						
+						//TODO:: world out
+						case w @ World(e, p) => "[" + w + "]"
+		  				
+						case other => other.toString
 					}
+					
+					//TODO::mod obj2str for worlds
+					def obj2str(a:Address): String = gStore(a) match {
+						case Object(o) => {
+							if(m.size == 0) ""
+							else{
+								o.foldLeft("") ( (s,b) => b._2 match {
+									case Address(a2) => s + ", " + b._1 + " : " + val2str(gStore(Address(a2)));
+									case _ => s
+								})
+							}							
+						}
+						case w @ World(e,p) => w.toString
+						case Address(a) => gStore(Address(a)).toString
+						case other => other.toString						
+						//ORIG
+		  				/*case Object(o) => o.foldLeft( "" ){ 
+		    				case (s, (str, v)) => s + ", " + str + " : " + val2str(v) 
+		  				}		  				
+						case _ => throw undefined("outputting illegal value")*/					
+					}					
 					println(val2str(evalTo(e)))
 					UnitV()
 	      		}
+	
+				//TODO:: mod update for worlds
 	      		case Update(e1, e2, e3) => (evalTo(e1), evalTo(e2), evalTo(e3)) match {
 					case (a:Address, StringV(str), v:Value) => gStore(a) match {
 		  				case o:Object => {
@@ -276,6 +297,7 @@ package cs162.Worlds.interpreter {
 					}
 					case _ => throw undefined("illegal object update")
 	      		}
+	
 	      		case Num(n) => NumV(n)
 	      		case Bool(b) => BoolV(b)
 	      		case Str(str) => StringV(str)
@@ -341,6 +363,8 @@ package cs162.Worlds.interpreter {
 					case _ => throw undefined("calling a non-closure")
 	      		}
 	      		case Block(vbs, t) => {
+					//TODO::add current world to block
+					
 					val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitV())
 					val newEnv = dummies.foldLeft( env )(
 		  			(env, xv) => env + (xv._1 -> alloc(xv._2)) )
@@ -349,11 +373,14 @@ package cs162.Worlds.interpreter {
 					eval(Config(t, newEnv))
 	      		}
 	      		case f:Fun => FunClo(env, f)
+	
 	      		case Obj(fbs) => {
 					val o = fbs.foldLeft( Object() )(
 		  			(o,fb) => o + (fb.s.str -> evalTo(fb.e)) )
 					alloc(o)
 	      		}
+			
+				//TODO:: add commit and sprout operations to access
 	      		case Access(e1, e2) => (evalTo(e1), evalTo(e2)) match {
 					case (a:Address, StringV(str)) => gStore(a) match {
 		  				case o:Object => lookProto(o, str)
@@ -361,6 +388,7 @@ package cs162.Worlds.interpreter {
 					}
 					case _ => throw undefined("illegal object field access")
 	      		}
+	
 	      		case m:Method => MethClo(env, m)
 	      		case MCall(er, ef, es) => (evalTo(er), evalTo(ef)) match {
 					case (a:Address, StringV(str)) => gStore(a) match {
