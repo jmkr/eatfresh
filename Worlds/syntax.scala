@@ -1,3 +1,6 @@
+// John Meeker
+// Ken Hwang
+
 package cs162.worlds.syntax
 
 import java.io._
