@@ -32,7 +32,7 @@ package cs162.Worlds.interpreter {
 	// explained below this is because we take advantage of Scala's impure
 	// nature in order to have a global, mutable store instead of
 	// threading it through the computation
-	case class Config(t:Term, env:Env)
+	case class Config(t:Term, world:World)
 	
 	// environment: Var -> Address
 	case class Env(env:Map[Var, Address] = Map()) {
@@ -150,29 +150,7 @@ package cs162.Worlds.interpreter {
 	  	}
 	
 	 	// look up a field in the prototype chain of a record
-		def lookProto(o:Object, str:String): Value = {
-			o(str) match {
-				case Address(a) => gStore(Address(a))
-				case _ => {
-					o("proto") match {
-						case Address(a) => {
-							gStore(Address(a)) match {
-								case Object(m) => lookProto(Object(m), str)
-								case Address(a2) => gStore(Address(a2)) match {
-									case Object(m) => lookProto(Object(m), str)
-									case _ => throw undefined("proto not address")
-								}
-								case _ => throw undefined("proto not address")
-	 						}
-						}
-						case _ => throw undefined("proto not address")
-					}
-				}
-			}
-		}
-		//ORIG
-		/*
-		  def lookProto(o:Object, str:String): Value = o.o get str match {
+		def lookProto(o:Object, str:String): Value = o.o get str match {
 		    case Some(v) => v
 		    case None => o.o get "proto" match {
 		      case None => UnitV()
@@ -183,7 +161,7 @@ package cs162.Worlds.interpreter {
 		      case _ => throw undefined("proto isn't an address")
 		    }
 		  }
-		}*/
+		}
 		
 		// TODO:: look up variable in world
 		///////----------------------------
@@ -191,12 +169,22 @@ package cs162.Worlds.interpreter {
 		
 		
 		//TODO:: create a new world aka sprout
-		def newWorld(parent:World): World = {
-			World(Env(), parent)
-		}
+		def newWorld(pw:World): World = {
+		  	val newEnv = pw.env.foldLeft( Env() )( (env, xv) => { 
+			    //println(xv._1 + " -> " + gStore(xv._2.asInstanceOf[Address]))
+			    env + (xv._1 -> alloc(gStore(xv._2.asInstanceOf[Address]))) 
+			  } )
+		    val newWorld = World(newEnv, pw)
+		    gStore(newWorld.env(Var("thisWorld"))) = newWorld
+		    newWorld
+	  }
+	
 		
 		
 		//TODO:: make update process to push changes from parent world to child environment 
+		
+		//TODO:: make compare method to compare changes between two worlds 
+		
 		
 	
 	//---------- INTERPRETER ----------
@@ -257,30 +245,18 @@ package cs162.Worlds.interpreter {
 		  				case StringV(s) if s == "" => "\"\""
 						
 						//TODO:: world out
-						case w @ World(e, p) => "[" + w + "]"
+						//case w @ World(e, p) => "[" + w + "]"
 		  				
 						case other => other.toString
 					}
 					
 					//TODO::mod obj2str for worlds
-					def obj2str(a:Address): String = gStore(a) match {
-						case Object(o) => {
-							if(m.size == 0) ""
-							else{
-								o.foldLeft("") ( (s,b) => b._2 match {
-									case Address(a2) => s + ", " + b._1 + " : " + val2str(gStore(Address(a2)));
-									case _ => s
-								})
-							}							
-						}
-						case w @ World(e,p) => w.toString
-						case Address(a) => gStore(Address(a)).toString
-						case other => other.toString						
+					def obj2str(a:Address): String = gStore(a) match {												
 						//ORIG
-		  				/*case Object(o) => o.foldLeft( "" ){ 
+		  				case Object(o) => o.foldLeft( "" ){ 
 		    				case (s, (str, v)) => s + ", " + str + " : " + val2str(v) 
 		  				}		  				
-						case _ => throw undefined("outputting illegal value")*/					
+						case _ => throw undefined("outputting illegal value")			
 					}					
 					println(val2str(evalTo(e)))
 					UnitV()
@@ -358,7 +334,8 @@ package cs162.Worlds.interpreter {
 		  				val xv = (f :: xs) zip (clo :: (es map evalTo))
 		  				val newEnv = xv.foldLeft( cloEnv )(
 		    			(env, xv) => env + (xv._1 -> alloc(xv._2)) )
-		  				eval(Config(t, newEnv))
+		  				//eval(Config(t, newEnv))
+						eval(Config(t, World(newEnv, config.world.p)))		
 					}
 					case _ => throw undefined("calling a non-closure")
 	      		}
@@ -384,39 +361,22 @@ package cs162.Worlds.interpreter {
 	      		case Access(e1, e2) => (evalTo(e1), e2) match {
 					case (a:Address, s:Str) => gStore(a) match { 
 						case o @ Object(m) => lookProto(o, s.str)
-						case _ => throw undefined("illegal object field access")
+						case _ => throw undefined("access: address of a non-object")
 					}
-					case (w @ World(e, p), s:Str) =>  gStore(w.env(Var(s.str))) //lookWorld(w, s.str)
+					case (w @ World(e, p), s:Str) =>  gStore(w.env(Var(s.str)))
 					case (w @ World(e, p), c:Call) => c.ef match {
-						case Var(x) => x match {
-							
+						case Var(x) => x match {							
 							//TODO:: sprout
 							case "sprout" => {
 								val nw = newWorld(w) 
 								nw
-							}
-							
-							//TODO:: commit
-							case "commit" => c.es match {
-						    	case Nil =>{
-							    	w.env foreach ( (a) => if(a._1 != Var("thisWorld")) gStore(a._2) match { 
-							        	case Address(a2) => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(Address(a2))
-							            case _ => gStore(w.p.asInstanceOf[World].env(a._1)) = gStore(a._2) 
-							        })
-							        UnitV()
-							    }
-							    case _ => {
-							    	println("non-empty commit")
-							        UnitV()
-							    }
-							}
+							}							
 						case _ => throw undefined("illegal object field access")
 						}
 					case _ => throw undefined("illegal object field access")
 					}
 					case _ => throw undefined("illegal object field access")
-				} 
-	
+				} 	
 				//ORIG
 				/*case Access(e1, e2) => (evalTo(e1), evalTo(e2)) match {
 					case (a:Address, StringV(str)) => gStore(a) match {
@@ -426,7 +386,14 @@ package cs162.Worlds.interpreter {
 					case _ => throw undefined("illegal object field access")
 	      		}*/
 	
+				//TODO:: add inside block functionality
+				case Inside(w, t) => evalTo(w) match {
+					case world @ World(e, p) => eval(Config(t, world))
+					case _ => throw undefined("illegal within on non-world")
+				}
+		
 	      		case m:Method => MethClo(env, m)
+	
 	      		case MCall(er, ef, es) => (evalTo(er), evalTo(ef)) match {
 					case (a:Address, StringV(str)) => gStore(a) match {
 		  				case o:Object => lookProto(o, str) match {
@@ -438,7 +405,8 @@ package cs162.Worlds.interpreter {
 		      					val xvs = (self :: xs) zip (a :: (es map evalTo))
 		      					val newEnv = xvs.foldLeft( cloEnv )(
 								(env, xv) => env + (xv._1 -> alloc(xv._2)) )
-		      					eval(Config(t, newEnv))
+		      					//eval(Config(t, newEnv))
+								eval(Config(t, World(newEnv, config.world.p)))		
 		    				}
 		    				case _ => throw undefined("calling a non-method")
 		  				}
@@ -446,6 +414,17 @@ package cs162.Worlds.interpreter {
 					}
 					case _ => throw undefined("illegal method call")
 	      		}
+				case VarBind(x, e) => {
+					gStore(env(x)) match {
+						case w @ World(e,p) => {
+							//TODO::
+							
+							
+						}
+						case _ => UnitV()						
+					}
+					UnitV()
+				}
 	    	}
 	    	evalTo(config.t)
 		}
