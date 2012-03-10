@@ -386,18 +386,31 @@ def eval(config:Config): Value = {
 			              UnitV()
 			            }
 			            case _ => {
-			              println("non-empty commit")
+			              c.es foreach ( (a) => a match {
+			              	case v @ Var(c) => gStore(w.env(v)) match {
+				              		case Address(a2) => gStore(w.p.asInstanceOf[World].env(v)) = gStore(Address(a2))
+				              		case _ => gStore(w.p.asInstanceOf[World].env(v)) = gStore(w.env(v))
+				              	}
+				            	case _ => throw undefined("non-var passed to commit.")
+
+			              })
 			              UnitV()
 			            }
 					}
 					case "update" => c.es match {
 						case Nil => {
-							//println("empty update")
 							updateWorld(w)
 							UnitV()
 						}
 						case _ => {
-							println("non-empty update")
+							//println("non-empty update")
+							c.es foreach ( (a) => a match {
+								case v @ Var(c) => gStore(w.p.asInstanceOf[World].env(v)) match {
+									case Address(a2) => gStore(w.env(v)) = gStore(Address(a2))
+									case _ => gStore(w.env(v)) = gStore(w.p.asInstanceOf[World].env(v))
+								}
+								case _ => throw undefined("non-var passed to update.")
+							})
 							UnitV()
 						}
 					}

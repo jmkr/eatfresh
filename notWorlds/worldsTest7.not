@@ -1,0 +1,34 @@
+var
+        a = unit,
+        b = unit,
+        c = unit,
+        d = unit,
+        e = unit
+    in
+        a := thisWorld;
+        b := a.sprout();
+
+        within b {
+            c := thisWorld.sprout();  << thisWorld refers to b here >>
+            within c {
+                d := 7;
+                e := 22
+            };
+            c.commit(d, e)
+        };
+        
+        b.commit(d);
+        output d;   << prints 7 >>
+        output e;   << prints unit >>
+
+        b.commit();
+        output e;   << prints 22 >>
+
+        d := 23;
+        e := 0;
+        b.update(e);
+
+        within b {
+            output d;    << prints 7 >>
+            output e     << prints 0 >>
+        }
