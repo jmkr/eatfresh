@@ -2,27 +2,27 @@ var a = 10,
 	b = thisWorld.sprout(),
 	c = thisWorld.sprout()
 	
-in
+in {
 	inside b{
 		a:=20
-	}
+	};
 
 	inside c{
 		a:=30
-	}
+	};
 
 	inside b{
 		output a 	<<should be 20>>
-	}
+	};
 	
-	output a		<<should be 10>>
+	output a;		<<should be 10>>
 	
-	b.commit()
+	b.commit();
 	
-	output a		<<should be 20>>
+	output a;		<<should be 20>>
 		
-	c.commit()		
+	c.commit();		
 
 	output a		<<should be 30>> 
 	
-	
+}	
