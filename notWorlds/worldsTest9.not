@@ -1,0 +1,46 @@
+var
+	sortedlist = {
+		"head": unit, "tail": unit,
+		"getTail" : (self) => {
+			if (self."tail" = unit) self."tail" := { "proto": sortedlist };
+			self."tail"
+		},
+		"insert" : (self, x) => {
+			if (self."head" = unit) self."head" := x
+			else if (self."head" <= x) (self."getTail"[])."insert"[x]
+			else var tmp = self."head" in
+				self."head" := x;
+				self."tail" := { "head": tmp, "tail": self."tail", "proto": sortedlist }
+		},
+		"print" : (self) => {
+			if (!(self."head" = unit)) {
+				output self."head";
+				if (!(self."tail" = unit)) (self."tail")."print"[]
+			}
+		}
+	},
+	get_num = f() => {
+		output "next num (0 to stop):";
+		input num
+	},
+	go_again = f() => {
+		output "would you like to go again? y/n";
+		input str
+	},
+	curr_num = unit,
+	curr_go = "y",
+	tiles = unit
+in
+	while(curr_go = "y"){
+		within thisWorld.sprout(){
+			tiles := { "proto": sortedlist };
+			curr_num := get_num();
+			while(!(curr_num=0)){
+				tiles."insert"[curr_num];
+				curr_num := get_num()
+			};
+			tiles."print"[]
+		};
+		curr_go := go_again()
+	};
+	output "goodbye."
