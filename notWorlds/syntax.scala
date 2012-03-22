@@ -30,7 +30,7 @@ case class Not(e:Exp) extends Exp
 case class BinOp(op:Bop, e1:Exp, e2:Exp) extends Exp
 case class If(e:Exp, t1:Term, t2:Term) extends Exp
 case class In(typ:InputType) extends Exp
-case class Within(world:Var, block:Term) extends Exp
+case class Within(world:Exp, block:Term) extends Exp
 case class Call(ef:Exp, es:List[Exp]) extends Exp
 case class Block(vds:List[VarBind], t:Term) extends Exp
 case class Fun(f:Var, xs:List[Var], t:Term) extends Exp
@@ -204,7 +204,8 @@ object PrettyPrint {
 	printNode(myLbl, "input " + ts)
 	myLbl
       }
-      case Within(Var(world), block) => {
+      case Within(e, block) => {
+  val world = output(e)
 	var blockLbl = output(block)
 	val myLbl = getid
 	
@@ -462,7 +463,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
   { case fun ~ args => Call(fun, args) }
 
   // Within
-  lazy val withinP: P[Within] = "within" !!! "within" ~> varP ~ ("{" ~> TermP <~ "}") ^^
+  lazy val withinP: P[Within] = "within" !!! "within" ~> ExpP ~ ("{" ~> TermP <~ "}") ^^
   { case world ~ block => Within(world, block) }
 
   // block
