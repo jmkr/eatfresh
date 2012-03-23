@@ -414,7 +414,7 @@ object ParseL extends StandardTokenParsers with PackratParsers {
 
   // commit
   lazy val commitP: P[Commit] = "commit" !!! varP <~ ("." ~ "commit()") ^^
-  { case w => Commit(w) }
+  { case w => { Commit(w) } }
 
   // object field access
   lazy val accessP: P[Access] = "access" !!! varP ~ ("." ~> varP) <~ not(":=") ^^

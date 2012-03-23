@@ -32,14 +32,18 @@ package cs162.Worlds.interpreter {
 	// explained below this is because we take advantage of Scala's impure
 	// nature in order to have a global, mutable store instead of
 	// threading it through the computation
-	case class Config(t:Term, world:World)
-	
+	//case class Config(t:Term, world:World)
+	case class Config(t:Term, env:Env)
+
 	// environment: Var -> Address
-	case class Env(env:Map[Var, Address] = Map()) {
+	case class Env(env:Map[Var, Address] = Map()) extends Value {
 	  def apply(x:Var): Address = {
 	    env get x match {
 	      case Some(a) => a
-	      case None => throw undefined("free variable")
+	      case None => {
+                  print(x)
+                  throw undefined("free variable")
+              }
 	    }
 	  }
 	  def +(tup:Tuple2[Var, Address]): Env = Env(env + tup)
@@ -82,7 +86,7 @@ package cs162.Worlds.interpreter {
 	  override def toString = o.toString
 	}
 	
-	//TODO:: case class World
+	//not needed, apparently
 	case class World(env:Map[Var, Address] = Map(), p:Value = UnitV()) extends Value {
 	  def apply(x:Var): Address = {
 	    env get x match {
@@ -137,7 +141,15 @@ package cs162.Worlds.interpreter {
 	  	import Interp._
 	
 	  	// lift program to initial configuration.
-	  	def inject(prog:Program): Config = { Config(prog.t, World(Env(), UnitV())) }
+                def inject(prog:Program): Config = { 
+                var env = Env()
+                val parent = alloc(env)
+                env = env+(Var("parent") -> parent)
+                env = env+(Var("self") -> parent)
+                Config(prog.t, env) 
+                }
+
+                //def inject(prog:Program): Config = { Config(prog.t, World(Env(), UnitV())) }
 	
 	  	// allocate value into store; unlike the helper function specified
 	  	// in the semantics this one takes a single value and returns a
@@ -213,7 +225,7 @@ package cs162.Worlds.interpreter {
 	
 	  	// the evaluation function [[.]] \in Config -> Value
 	  	def eval(config:Config): Value = {
-	    	val env = config.world.env
+	    	val env = config.env
 	
 	    	// since we'll be making lots of recursive calls where the
 	    	// environment doesn't change, we'll define an inner function that
@@ -332,10 +344,9 @@ package cs162.Worlds.interpreter {
 		    				throw undefined("arguments and parameters don't match")
 		  
 		  				val xv = (f :: xs) zip (clo :: (es map evalTo))
-		  				val newEnv = xv.foldLeft( cloEnv )(
-		    			(env, xv) => env + (xv._1 -> alloc(xv._2)) )
+		  				val newEnv = xv.foldLeft( cloEnv )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
 		  				//eval(Config(t, newEnv))
-						eval(Config(t, World(newEnv, config.world.p)))		
+						eval(Config(t, newEnv))		
 					}
 					case _ => throw undefined("calling a non-closure")
 	      		}
@@ -343,14 +354,11 @@ package cs162.Worlds.interpreter {
 					//TODO::add current world to block
 					
 					val dummies = for ( VarBind(x,_) <- vbs ) yield (x, UnitV())
-					val newEnv = dummies.foldLeft( env )(
-		  			(env, xv) => env + (xv._1 -> alloc(xv._2)) )
+					val newEnv = dummies.foldLeft( env )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
 		
-					for ( VarBind(x, e) <- vbs ) gStore(newEnv(x)) = eval(Config(e, World(newEnv, config.world.p)))
+					for ( VarBind(x, e) <- vbs ) gStore(newEnv(x)) = eval(Config(e, newEnv))
 					
-					val newWorld = World(newEnv, UnitV());
-					gStore(newEnv(Var("thisWorld"))) = newWorld					
-					eval(Config(t, newWorld))
+					eval(Config(t, newEnv))
 	      		}
 	      		case f:Fun => FunClo(env, f)
 	
@@ -366,20 +374,57 @@ package cs162.Worlds.interpreter {
 						case o @ Object(m) => lookProto(o, s.str)
 						case _ => throw undefined("access: address of a non-object")
 					}
-					case (w @ World(e, p), s:Str) =>  gStore(w.env(Var(s.str)))
-					case (w @ World(e, p), c:Call) => c.ef match {
+					case (w:Env, c:Call) => c.ef match {
 						case Var(x) => x match {							
 							//TODO:: sprout
 							case "sprout" => {
-								val nw = newWorld(w) 
-								nw
-							}							
-						case _ => throw undefined("illegal object field access")
-						}
-					case _ => throw undefined("illegal object field access")
-					}
-					case _ => throw undefined("illegal object field access")
-				} 	
+								var newenv = Env(w)
+                                                                gStore(newenv(Var("parent"))) = env(Var("self"))
+                                                                val self = alloc(newenv)
+                                                                newenv = newenv+(Var("self") -> self)
+                                                                self
+							}
+                                                        case "commit" => {
+                                                            w(Var("self"))
+                                                        }							
+                                                        case _ => throw undefined("illegal object field access2")
+                                                }
+                                                
+                                                case _ => throw undefined("illegal object field access3")
+                                        }
+                                        
+                                        case (a:Address, v:Var) => (gStore(a), v.x) match{
+                                            case (w:Env, "commit") => {
+                                                println("committing!")
+                                                UnitV()
+                                            }
+                                            case _ => { throw undefined("oh nose!") }
+                                        }
+                                            
+//                                            case Var("sprout") => {
+//                                                w match {
+//                                                  case w:Env => {
+//                                                      var newenv = Env(w)
+//                                                                gStore(newenv(Var("parent"))) = env(Var("self"))
+//                                                                val self = alloc(newenv)
+//                                                                newenv = newenv+(Var("self") -> self)
+//                                                          self
+//                                                  }
+//                                                }
+//								
+//							}
+//                                              case Var("commit") => {
+//                                                            println("caught!!")
+//                                                            UnitV()
+//                                                  }	
+//                                        }
+                                       
+                                  case _ => {
+                                      println(e1)
+                                      println(e2)
+                                      throw undefined("illegal object field access4")
+                                  }
+                        } 
 				//ORIG
 				/*case Access(e1, e2) => (evalTo(e1), evalTo(e2)) match {
 					case (a:Address, StringV(str)) => gStore(a) match {
@@ -390,18 +435,78 @@ package cs162.Worlds.interpreter {
 	      		}*/
 				
 				//TODO:: this is how sprouting should be handled
-				case Sprout() => {
-					
-					val newWorld = World(Env(), UnitV());
-					gStore(Address()) = newWorld					
-					eval(Config(t, newWorld))				
-				}
+                        case Sprout() => {
+                                //val newWorld = World(Env(), UnitV());
+                                //gStore(Address()) = newWorld					
+//                                var newenv = Env(env)
+//                                newenv = newenv+(Var("parent") -> Address())
+//                                gStore(newenv(Var("parent"))) = env
+                                
+                                val newenv = env.foldLeft(Env())(
+                                  (e, xv) => { 
+                                    if (xv._1==Var("parent") ){ 
+                                      e+ (xv._1 -> env( Var("self") ) )
+                                    }else{
+                                      e+ (xv._1 -> alloc(gStore(xv._2)))
+                                    }
+                                  } )
+                                
+
+            
+                                val self = alloc(newenv)  
+                                val newerenv = newenv+( Var("self") -> self) 
+                                self
+                                //eval(Config(t, newenv))			
+                        }
 	
 				//TODO:: add inside block functionality
-				case Inside(w, t) => evalTo(w) match {
-					case world @ World(e, p) => eval(Config(t, world))
-					case _ => throw undefined("illegal within on non-world")
-				}
+			case Inside(w, t) => evalTo(w) match {
+				case world:Address => {
+                                    gStore(world) match {
+                                      case e:Env => {
+                                          //println("inside")
+   //                                       println(gStore)
+    //                                      println(world)
+     //                                     println()
+     //                                     println
+//println(e(Var("self")))
+                        eval(Config(t, e))
+                                      }
+                                      case _ => {}
+                                    }
+                                    BoolV(true)
+                                }
+				case eeh @ _ => {
+                                    print(eeh)
+                                    throw undefined("illegal within on non-world")
+                                }
+			}
+                        case Commit(w) => { w match {
+                                                 
+                        
+                        case a:Address => {
+                            gStore(a) match {
+
+                            case ee:Env => {
+                                
+                            gStore(ee(Var("parent"))) match {
+                              case eee:Env => {
+                                  eval(Config(t,eee))
+                                  UnitV()
+                              }
+                              case _ => {UnitV()}
+                            }
+
+                            }
+                            case _ => {UnitV()}      
+                  }
+                          }
+                             
+              
+                        }
+      
+            
+                        }
 		
 	      		case m:Method => MethClo(env, m)
 	
@@ -414,10 +519,8 @@ package cs162.Worlds.interpreter {
 	
 		      					val self = Var("self")
 		      					val xvs = (self :: xs) zip (a :: (es map evalTo))
-		      					val newEnv = xvs.foldLeft( cloEnv )(
-								(env, xv) => env + (xv._1 -> alloc(xv._2)) )
-		      					//eval(Config(t, newEnv))
-								eval(Config(t, World(newEnv, config.world.p)))		
+		      					val newEnv = xvs.foldLeft( cloEnv )((env, xv) => env + (xv._1 -> alloc(xv._2)) )
+		      					eval(Config(t, newEnv))
 		    				}
 		    				case _ => throw undefined("calling a non-method")
 		  				}
